@@ -64,7 +64,7 @@ $(document).ready(function(){
             }
             if(event.key === ' ' && event.type === 'keydown'){
                 console.log("hit stone");
-                socket.emit("hit_stone",{"theta":playercursor,"velocity":7});
+                socket.emit("hit_stone",{"theta":playercursor,"velocity":3});
                 $(document).off('keydown keyup');
             }
         });
