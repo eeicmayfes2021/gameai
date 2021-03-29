@@ -6,6 +6,9 @@ $ pip install aiohttp
 $ pip install python-socketio
 $ python server.py
 ```
+```
+pip install git+https://github.com/openai/gym
+```
 
 ## メモ
 以下のことはまだやらなくても動きます（後で追加したいのでメモ）
