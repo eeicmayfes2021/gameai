@@ -10,7 +10,7 @@ sio.attach(app)
 
 WIDTH=600
 HEIGHT=1000
-BALL_RADIUS=50
+BALL_RADIUS=30
 
 class Stone:
     def __init__(self,camp,v,theta):
