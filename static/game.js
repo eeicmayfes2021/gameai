@@ -32,7 +32,6 @@ function rewriteSituation(data){
     clearAndWriteStage();
     if(data===null)return;
     Object.values(data.stones).forEach((stone)=>{
-        console.log(stone);
         context.beginPath();
         if(stone.camp==='you')context.fillStyle = 'red';
         else context.fillStyle = 'blue';
@@ -41,7 +40,6 @@ function rewriteSituation(data){
     });
 }
 function writePointer(theta){
-    console.log(theta);
     rewriteSituation(data_storage);//再描写（いい方法があれば変えたい…）
     var length=300;
     context.lineWidth = 5;
@@ -85,5 +83,11 @@ $(document).ready(function(){
     socket.on('move_stones', (data) =>{
         rewriteSituation(data);
         data_storage=data;
+    });
+    socket.on('you_win', (data) =>{
+        console.log("you win!")
+    });
+    socket.on('AI_win', (data) =>{
+        console.log("AI win!")
     });
 });

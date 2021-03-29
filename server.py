@@ -52,6 +52,9 @@ class Stone:
         t=np.dot(self.v,e)-np.dot(other.v,e)
         self.v=self.v-t*e
         other.v=self.v+t*e
+    def return_dist(self):
+        dist=math.sqrt( (self.x-WIDTH/2)**2+(self.y-HEIGHT/2)**2 )
+        return dist
     def encode(self):
         return {'x': self.x,
             'y': self.y,
@@ -97,7 +100,6 @@ async def hit_stone(sid,data):
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
         sio.sleep(10)
-        print("move!")
         stillmove = False
         for stone in situations[sid]:
             stone.move()
@@ -112,7 +114,6 @@ async def hit_stone(sid,data):
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
         sio.sleep(10)
-        print("move!")
         stillmove = False
         for stone in situations[sid]:
             stone.move()
@@ -122,15 +123,26 @@ async def hit_stone(sid,data):
             pair[0].collision(pair[1])
         if not stillmove:
             break
-    await sio.emit('your_turn',room=sid)
+    if len(situations[sid])==16 :
+        #ターン終わり
+        winside='you'
+        min_dist=1001001001
+        for stone in situations[sid]:
+            if stone.return_dist() < min_dist:
+                min_dist=stone.return_dist()
+                winside=stone.camp
+        if winside=='you':
+            await sio.emit('you_win',room=sid)
+        else:
+            await sio.emit('AI_win',room=sid)
+    else:
+        await sio.emit('your_turn',room=sid)
         
         
 
 
 @sio.event
 def disconnect(sid):
-    print("situation:",situations.pop(sid,"Not Found"))
-    print("situations:",situations)
     print('disconnect ', sid)
 
 app.router.add_static('/static', 'static')
