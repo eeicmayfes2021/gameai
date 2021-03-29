@@ -6,13 +6,26 @@ const playerImage = $('#player-image')[0];
 let playercursor=90;
 let data_storage=null;
 //球を打つ
+function fillarc(x,y,size,color){
+    context.fillStyle =color;
+    context.beginPath();
+    context.arc(x, y,size,0,2*Math.PI);
+    context.closePath();
+    context.fill();
+}
 function clearAndWriteStage(){
+    context.save();
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.lineWidth = 10;
     context.beginPath();
     context.rect(0, 0, canvas.width, canvas.height);
     context.closePath();
     context.stroke(); 
+    fillarc(canvas.width/2, canvas.height/2,250,'darkblue');
+    fillarc(canvas.width/2, canvas.height/2,200,'white');
+    fillarc(canvas.width/2, canvas.height/2,100,'brown');
+    fillarc(canvas.width/2, canvas.height/2,50,'white');
+    context.restore();
 }
 
 function rewriteSituation(data){

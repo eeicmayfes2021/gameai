@@ -23,8 +23,9 @@ class Stone:
         self.v=np.array([v*math.cos(math.radians(theta)),v*math.sin(math.radians(theta))])
         self.radius=BALL_RADIUS
     def move(self):
-        if np.linalg.norm(self.v, ord=2)>FRICTION:
-            self.v=self.v*(np.abs(self.v)-FRICTION)/np.abs(self.v) #0.05減速
+        vnorm=np.linalg.norm(self.v, ord=2)
+        if vnorm>FRICTION:
+            self.v=self.v*(vnorm-FRICTION)/vnorm #0.05減速
         else:
             self.v=np.array([0,0])#停止
         self.x+=self.v[0]
