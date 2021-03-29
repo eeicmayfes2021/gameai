@@ -2,6 +2,7 @@ from aiohttp import web
 import socketio
 import math
 import threading
+import itertools
 
 sio = socketio.AsyncServer(async_mode='aiohttp',logger=True, engineio_logger=True)
 app = web.Application()
@@ -38,6 +39,20 @@ class Stone:
         if self.y<0: #y軸方向に反転
             self.y=-self.y
             self.theta=-self.theta
+    def collision(self,other):
+        dist=math.sqrt( (self.x-other.x)**2+(self.y-other.y)**2 )
+        if dist>self.radius+other.radius:
+            return
+        #衝突している時
+        #後で運動方程式をとく…（今は適当）
+        if self.v>0 :
+            other.theta=self.theta
+            other.v=self.v
+            self.v=0
+        else :
+            self.theta=other.theta
+            self.v=other.v
+            other.v=0
     def encode(self):
         return {'x': self.x,
             'y': self.y,
@@ -89,6 +104,8 @@ async def hit_stone(sid,data):
             stone.move()
             if stone.v!=0:
                 stillmove=True
+        for pair in itertools.combinations(situations[sid], 2): #衝突判定
+            pair[0].collision(pair[1])
         if not stillmove:
             break
     #相手が打つ
@@ -102,6 +119,8 @@ async def hit_stone(sid,data):
             stone.move()
             if stone.v!=0:
                 stillmove=True
+        for pair in itertools.combinations(situations[sid], 2): #衝突判定
+            pair[0].collision(pair[1])
         if not stillmove:
             break
     await sio.emit('your_turn',room=sid)
