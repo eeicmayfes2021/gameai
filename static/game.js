@@ -95,9 +95,9 @@ $(document).ready(function(){
         data_storage=data;
     });
     socket.on('you_win', (data) =>{
-        console.log("you win!")
+        console.log("you win! score:",data["score"])
     });
     socket.on('AI_win', (data) =>{
-        console.log("AI win!")
+        console.log("AI win! score:",data["score"])
     });
 });

@@ -124,17 +124,28 @@ async def hit_stone(sid,data):
         if not stillmove:
             break
     if len(situations[sid])==16 :
-        #ターン終わり
-        winside='you'
-        min_dist=1001001001
+        #ゲーム終わり
+        player1_min_dist=1001001001
+        player2_min_dist=1001001001
         for stone in situations[sid]:
-            if stone.return_dist() < min_dist:
-                min_dist=stone.return_dist()
-                winside=stone.camp
-        if winside=='you':
-            await sio.emit('you_win',room=sid)
-        else:
-            await sio.emit('AI_win',room=sid)
+            dist=stone.return_dist()
+            if stone.camp=='you':
+                player1_min_dist=min(player1_min_dist,dist)
+            else:
+                player2_min_dist=min(player2_min_dist,dist)
+        score=0
+        if player1_min_dist<player2_min_dist : #win player 1
+            for stone in situations[sid]:
+                dist=stone.return_dist()
+                if stone.camp=='you' and dist<player2_min_dist:
+                    score+=1 #player1のreward
+            await sio.emit('you_win',{"score":score},room=sid)
+        else: #win player 2
+            for stone in situations[sid]:
+                dist=stone.return_dist()
+                if stone.camp=='AI' and dist<player1_min_dist:
+                    score-=1 #player1のreward
+            await sio.emit('AI_win',{"score":score},room=sid)            
     else:
         await sio.emit('your_turn',room=sid)
         
