@@ -4,6 +4,7 @@ import math
 import threading
 import itertools
 import numpy as np
+import random
 
 sio = socketio.AsyncServer(async_mode='aiohttp',logger=True, engineio_logger=True)
 app = web.Application()
@@ -110,7 +111,7 @@ async def hit_stone(sid,data):
         if not stillmove:
             break
     #相手が打つ
-    situations[sid].append( Stone("AI",3,-40) )
+    situations[sid].append( Stone("AI",random.uniform(0.5,5),random.uniform(10,170)) )
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
         sio.sleep(10)

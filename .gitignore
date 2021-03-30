@@ -3,3 +3,4 @@ static/helvetiker_bold.typeface.json
 /node_modules
 /package-lock.json
 curlingenv/__pycache__
+.ipynb_checkpoints

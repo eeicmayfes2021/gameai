@@ -69,11 +69,17 @@ class  CurlingEnv(gym.Env):
         # action_space, observation_space, reward_range を設定する
         self.WIDTH=600
         self.HEIGHT=1000
-        self.action_space =gym.spaces.Box(
+        self.action_space =gym.spaces.Tuple((spaces.Discrete(2), #どっちが打つか
+                                          spaces.Box(low=0.5, high=5, shape=1),#velocity
+                                          spaces.Box(low=10, high=170, shape=1)))#theta
+        """
+        #continuousにする方がいいか？
+        gym.spaces.Box(
             low=np.array([10,0]),
             high=np.array([170,5]),
             dtype=np.float
         )  # 10度~170度,速さ0~5
+        """
         #状態はSTONE_NUM*2個のカーリングの球のx,y,x,y,....(最初のSTONE_NUMつがyou,最後のSTONE_NUMつがAI)
         HIGH=np.array([1000 if i%2 else 600 for i in range(STONE_NUM*4)])
         self.observation_space = gym.spaces.Box(
@@ -88,14 +94,13 @@ class  CurlingEnv(gym.Env):
     def reset(self):
         # 諸々の変数を初期化する
         self.stone_position=np.array([-1 for i in range(STONE_NUM*4)])
-        self.turn='you'
         return self.stone_position
 
     def step(self, action):
         # 1ステップ進める処理を記述。戻り値は observation, reward, done(ゲーム終了したか), info(追加の情報の辞書)
         #theta=10+action//10 #10,11,...,170
         #velocity=(action%10+1)*0.5 #0.5,1.0,1.5,...,5
-        theta,velocity=action
+        camp,velocity,theta=action
         #状態をStonesにコピー
         self.stones=[]
         for i in range(STONE_NUM):#player1
@@ -116,15 +121,11 @@ class  CurlingEnv(gym.Env):
                     0))
         #新しいコマを配置
         self.stones.append(Stone(
-                    self.turn,
+                    "you" if camp==1 else "AI",
                     WIDTH/2,
-                    HEIGHT,
+                    HEIGHT if camp==-1 else 0,
                     velocity,
                     theta))
-        if self.turn=='you':
-            self.turn='AI'
-        else:
-            self.turn='you'
         #moveする
         while True:
             stillmove = False
@@ -173,7 +174,7 @@ class  CurlingEnv(gym.Env):
                     dist=np.sqrt( (self.stone_position[i*2]-WIDTH/2)**2+(self.stone_position[i*2+1]-HEIGHT/2)**2 )
                     if dist<player1_min_dist:
                         reward-=1 #player1のreward
-        return observation, reward, self.done, {"stonesize":len(self.stones)}
+        return observation, camp*reward, self.done, {"stonesize":len(self.stones)}
 
     def render(self, mode='human', close=False):
         # human の場合はコンソールに出力。ansiの場合は StringIO を返す
