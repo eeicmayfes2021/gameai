@@ -10,6 +10,7 @@ WIDTH=600
 HEIGHT=1000
 BALL_RADIUS=30
 FRICTION=0.01
+STONE_NUM=8
 #対戦型の環境にする方法がわからない…
 class Stone:
     def __init__(self,camp,x,y,v,theta):
@@ -69,34 +70,35 @@ class  CurlingEnv(gym.Env):
         self.WIDTH=600
         self.HEIGHT=1000
         self.action_space =gym.spaces.Box(
-            low=[10,0],
-            high=[170,5],
+            low=np.array([10,0]),
+            high=np.array([170,5]),
             dtype=np.float
         )  # 10度~170度,速さ0~5
-        #状態は16個のカーリングの球のx,y,x,y,....(最初の8つがyou,最後の8つがAI)
-        HIGH=np.array([1000 if i%2 else 600 for i in range(32)])
+        #状態はSTONE_NUM*2個のカーリングの球のx,y,x,y,....(最初のSTONE_NUMつがyou,最後のSTONE_NUMつがAI)
+        HIGH=np.array([1000 if i%2 else 600 for i in range(STONE_NUM*4)])
         self.observation_space = gym.spaces.Box(
             low=-1,
             high=HIGH,
-            shape=(32,),
+            shape=(STONE_NUM*4,),
             dtype=np.int
         )
-        self.reward_range = [-8,8]#相手の一番近くにあるストーンより近くにあるストーンの数
+        self.reward_range = [-STONE_NUM,STONE_NUM]#相手の一番近くにあるストーンより近くにあるストーンの数
         self.reset()
 
     def reset(self):
         # 諸々の変数を初期化する
-        self.stone_position=np.array([-1 for i in range(32)])
+        self.stone_position=np.array([-1 for i in range(STONE_NUM*4)])
         self.turn='you'
         return self.stone_position
 
     def step(self, action):
         # 1ステップ進める処理を記述。戻り値は observation, reward, done(ゲーム終了したか), info(追加の情報の辞書)
-        theta=10+action//10 #10,11,...,170
-        velocity=(action%10+1)*0.5 #0.5,1.0,1.5,...,5
+        #theta=10+action//10 #10,11,...,170
+        #velocity=(action%10+1)*0.5 #0.5,1.0,1.5,...,5
+        theta,velocity=action
         #状態をStonesにコピー
         self.stones=[]
-        for i in range(8):#player1
+        for i in range(STONE_NUM):#player1
             if self.stone_position[i*2] >= 0:
                 self.stones.append(Stone(
                     'you',
@@ -104,7 +106,7 @@ class  CurlingEnv(gym.Env):
                     self.stone_position[i*2+1],
                     0,
                     0))
-        for i in range(8,16):#player2
+        for i in range(STONE_NUM,STONE_NUM*2):#player2
             if self.stone_position[i*2] >= 0:
                 self.stones.append(Stone(
                     'AI',
@@ -120,7 +122,7 @@ class  CurlingEnv(gym.Env):
                     velocity,
                     theta))
         if self.turn=='you':
-            self.turn=='AI'
+            self.turn='AI'
         else:
             self.turn='you'
         #moveする
@@ -135,37 +137,39 @@ class  CurlingEnv(gym.Env):
             if not stillmove:
                 break
         #stone_positionに移す
+        self.stone_position=np.array([-1 for i in range(STONE_NUM*4)])
         i_you=0
-        i_AI=8
+        i_AI=STONE_NUM
         for stone in self.stones:
-            if stone.camp=='you':
+            if stone.camp=='you' and i_you<STONE_NUM:
                 self.stone_position[i_you*2]=stone.x
                 self.stone_position[i_you*2+1]=stone.y
                 i_you+=1
-            if stone.camp=='AI':
+            if stone.camp=='AI' and i_AI<STONE_NUM*2:
                 self.stone_position[i_AI*2]=stone.x
                 self.stone_position[i_AI*2+1]=stone.y
                 i_AI+=1
 
         observation = self.stone_position
         reward = 0 #todo:一番近いストーンの近さに比例したreward
-        self.done = ( len(self.stones)==16 ) #16個全部埋まってたらdone
+        self.done = ( len(self.stones)==STONE_NUM*2 ) #STONE_NUM*2個全部埋まってたらdone
+        #print(len(self.stones),self.done)
         if self.done:
             player1_min_dist=1001001001
             player2_min_dist=1001001001
-            for i in range(8):#player1
+            for i in range(STONE_NUM):#player1
                 dist=np.sqrt( (self.stone_position[i*2]-WIDTH/2)**2+(self.stone_position[i*2+1]-HEIGHT/2)**2 )
                 player1_min_dist=min(player1_min_dist,dist)
-            for i in range(8,16):#player1
+            for i in range(STONE_NUM,STONE_NUM*2):#player1
                 dist=np.sqrt( (self.stone_position[i*2]-WIDTH/2)**2+(self.stone_position[i*2+1]-HEIGHT/2)**2 )
                 player2_min_dist=min(player2_min_dist,dist)
             if player1_min_dist<player2_min_dist : #win player 1
-                for i in range(8):
+                for i in range(STONE_NUM):
                     dist=np.sqrt( (self.stone_position[i*2]-WIDTH/2)**2+(self.stone_position[i*2+1]-HEIGHT/2)**2 )
                     if dist<player2_min_dist:
                         reward+=1 #player1のreward
             else: #win player 2
-                for i in range(8,16):
+                for i in range(STONE_NUM,STONE_NUM*2):
                     dist=np.sqrt( (self.stone_position[i*2]-WIDTH/2)**2+(self.stone_position[i*2+1]-HEIGHT/2)**2 )
                     if dist<player1_min_dist:
                         reward-=1 #player1のreward

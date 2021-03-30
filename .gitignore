@@ -2,3 +2,4 @@ static/three.js
 static/helvetiker_bold.typeface.json
 /node_modules
 /package-lock.json
+curlingenv/__pycache__
