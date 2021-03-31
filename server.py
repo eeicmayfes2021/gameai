@@ -10,7 +10,7 @@ from torch import nn, optim
 
 from ddqn_curling import CNNQNetwork
 
-sio = socketio.AsyncServer(async_mode='aiohttp',logger=True, engineio_logger=True)
+sio = socketio.AsyncServer(async_mode='aiohttp')#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
