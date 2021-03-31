@@ -5,15 +5,22 @@ import threading
 import itertools
 import numpy as np
 import random
+import torch
+from torch import nn, optim
+
+from ddqn_curling import CNNQNetwork
 
 sio = socketio.AsyncServer(async_mode='aiohttp',logger=True, engineio_logger=True)
 app = web.Application()
 sio.attach(app)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+net_load =  torch.load("model.pt")
 
 WIDTH=600
 HEIGHT=1000
 BALL_RADIUS=30
 FRICTION=0.01
+STONE_NUM=8
 class Stone:
     def __init__(self,camp,v,theta):
         self.camp=camp
@@ -62,7 +69,20 @@ class Stone:
             'radius':self.radius,
             'camp':self.camp}
 
-
+def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
+    obs=np.array([-1 for i in range(STONE_NUM*4)])
+    i_you=0
+    i_AI=STONE_NUM
+    for stone in stones:
+        if stone.camp=='you' and i_you<STONE_NUM:
+            obs[i_you*2]=stone.x
+            obs[i_you*2+1]=stone.y
+            i_you+=1
+        if stone.camp=='AI' and i_AI<STONE_NUM*2:
+            obs[i_AI*2]=stone.x
+            obs[i_AI*2+1]=stone.y
+            i_AI+=1
+    return obs
 
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
@@ -111,7 +131,10 @@ async def hit_stone(sid,data):
         if not stillmove:
             break
     #相手が打つ
-    situations[sid].append( Stone("AI",random.uniform(0.5,5),random.uniform(10,170)) )
+    obs=stonesToObs(situations[sid])
+    action = net_load.act(torch.from_numpy(obs.astype(np.float32)).clone().float().to(device),0)
+    situations[sid].append( Stone("AI",action[0],action[1]) )
+    
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
         sio.sleep(10)
@@ -124,7 +147,7 @@ async def hit_stone(sid,data):
             pair[0].collision(pair[1])
         if not stillmove:
             break
-    if len(situations[sid])==16 :
+    if len(situations[sid])==STONE_NUM*2 :
         #ゲーム終わり
         player1_min_dist=1001001001
         player2_min_dist=1001001001
