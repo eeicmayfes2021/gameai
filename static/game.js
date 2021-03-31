@@ -96,8 +96,12 @@ $(document).ready(function(){
     });
     socket.on('you_win', (data) =>{
         console.log("you win! score:",data["score"])
+        const scoreboard = document.getElementById("scoreboard");
+        scoreboard.innerHTML=data["score"]+"点であなたの勝利です．";
     });
     socket.on('AI_win', (data) =>{
         console.log("AI win! score:",data["score"])
+        const scoreboard = document.getElementById("scoreboard");
+        scoreboard.innerHTML=data["score"]+"点であなたの負けです．";
     });
 });
