@@ -48,7 +48,10 @@ class Stone:
             return
         #衝突している時
         #運動方程式解いた
-        e=np.array([self.x-other.x,self.y-other.y])/dist
+        if dist==0:
+            e=np.array([0,0])
+        else:
+            e=np.array([self.x-other.x,self.y-other.y])/dist
         t=np.dot(self.v,e)-np.dot(other.v,e)
         self.v=self.v-t*e
         other.v=self.v+t*e
@@ -69,9 +72,21 @@ class  CurlingEnv(gym.Env):
         # action_space, observation_space, reward_range を設定する
         self.WIDTH=600
         self.HEIGHT=1000
-        self.action_space =gym.spaces.Tuple((spaces.Discrete(2), #どっちが打つか
-                                          spaces.Box(low=0.5, high=5, shape=1),#velocity
-                                          spaces.Box(low=10, high=170, shape=1)))#theta
+        self.action_space =gym.spaces.Tuple((
+            gym.spaces.Discrete(2), #どっちが打つか
+            gym.spaces.Box(
+                low=np.array([0.5,10]),#velocity
+                high=np.array([5,170]),#theta
+                dtype=np.float
+            )
+            ))
+        """
+        #Discreteにする方がいいか？
+        gym.spaces.Tuple((
+            gym.spaces.Discrete(2), #どっちが打つか
+            gym.spaces.Discrete(10),#velocity
+            gym.spaces.Discrete(161) ))#theta
+        """
         """
         #continuousにする方がいいか？
         gym.spaces.Box(
@@ -100,7 +115,9 @@ class  CurlingEnv(gym.Env):
         # 1ステップ進める処理を記述。戻り値は observation, reward, done(ゲーム終了したか), info(追加の情報の辞書)
         #theta=10+action//10 #10,11,...,170
         #velocity=(action%10+1)*0.5 #0.5,1.0,1.5,...,5
-        camp,velocity,theta=action
+        camp,hit=action
+        velocity,theta=hit
+        #print(camp,velocity,action)
         #状態をStonesにコピー
         self.stones=[]
         for i in range(STONE_NUM):#player1

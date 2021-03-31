@@ -4,6 +4,7 @@
 $ npm install
 $ pip install aiohttp
 $ pip install python-socketio
+$ python ddqn_curling.py #(機械学習によるmodel.ptの生成)
 $ python server.py
 ```
 ```
