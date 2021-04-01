@@ -10,7 +10,7 @@ WIDTH=600
 HEIGHT=1000
 BALL_RADIUS=30
 FRICTION=0.01
-STONE_NUM=8
+STONE_NUM=5
 #対戦型の環境にする方法がわからない…
 class Stone:
     def __init__(self,camp,x,y,v,theta):
@@ -75,8 +75,8 @@ class  CurlingEnv(gym.Env):
         self.action_space =gym.spaces.Tuple((
             gym.spaces.Discrete(2), #どっちが打つか
             gym.spaces.Box(
-                low=np.array([0.5,10]),#velocity
-                high=np.array([5,170]),#theta
+                low=np.array([2,45]),#velocity
+                high=np.array([4,135]),#theta
                 dtype=np.float
             )
             ))
@@ -172,7 +172,7 @@ class  CurlingEnv(gym.Env):
         reward = 0 #todo:一番近いストーンの近さに比例したreward
         self.done = ( len(self.stones)==STONE_NUM*2 ) #STONE_NUM*2個全部埋まってたらdone
         #print(len(self.stones),self.done)
-        if self.done:
+        if self.done: #check:self.doneからTrue変更してみて報酬を密にしてみても良い？
             player1_min_dist=1001001001
             player2_min_dist=1001001001
             for i in range(STONE_NUM):#player1

@@ -4,6 +4,7 @@ import cv2
 import gym
 import numpy as np
 
+import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 import math
@@ -15,7 +16,9 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
 env = gym.make('curlingenv-v0')
-STONE_NUM=8
+STONE_NUM=5 #envのSTONE_NUMと合わせる
+HIDDEN=64 #隠れ層の大きさ
+
 
 class PrioritizedReplayBuffer(object):
     def __init__(self, buffer_size):
@@ -68,14 +71,14 @@ class CNNQNetwork(nn.Module):
         self.n_action = n_action
 
         self.fc_state = nn.Sequential(
-            nn.Linear(STONE_NUM*4, 64),
+            nn.Linear(STONE_NUM*4, HIDDEN),
             nn.ReLU(),
-            nn.Linear(64, 1)
+            nn.Linear(HIDDEN, 1)
         )
         self.fc_advantage = nn.Sequential(
-            nn.Linear(STONE_NUM*4, 64),
+            nn.Linear(STONE_NUM*4, HIDDEN),
             nn.ReLU(),
-            nn.Linear(64, n_action)
+            nn.Linear(HIDDEN, n_action)
         )
     
     def forward(self, obs):
@@ -89,24 +92,25 @@ class CNNQNetwork(nn.Module):
     def act(self, obs, epsilon):
         if random.random() < epsilon:
             action = random.randrange(self.n_action)
-            theta=action//10+10
-            velocity=(action%10)*0.5+0.5
+            theta=(action//9)*5+45
+            velocity=(action%9)/4+2
             action=(velocity,theta)
         else:
             with torch.no_grad():
                 action = torch.argmax(self.forward(obs.unsqueeze(0))).item()
-                #print(action)#action=((theta-10)//10)*10+((velocity-0.5)/0.5)
-                theta=(action//10)*10+10
-                velocity=(action%10)*0.5+0.5
+                #action=((theta-45)//5)*9+int((velocity-2)*4)
+                theta=(action//9)*5+45
+                velocity=(action%9)/4+2
                 action=(velocity,theta)
+        #print(action)
         return action
 
-buffer_size = 1000#00 
-initial_buffer_size = 100#00 
+buffer_size = 10000#0 
+initial_buffer_size = 1000#0 
 replay_buffer = PrioritizedReplayBuffer(buffer_size)
 
-net = CNNQNetwork(env.observation_space.shape, n_action=161*10).to(device)
-target_net = CNNQNetwork(env.observation_space.shape, n_action=161*10).to(device)
+net = CNNQNetwork(env.observation_space.shape, n_action=17*9).to(device)
+target_net = CNNQNetwork(env.observation_space.shape, n_action=17*9).to(device)
 target_update_interval = 2000 
 
 optimizer = optim.Adam(net.parameters(), lr=1e-4) 
@@ -129,6 +133,7 @@ epsilon_func = lambda step: max(epsilon_end, epsilon_begin - (epsilon_begin - ep
 
 
 def update(batch_size, beta):
+    #print("update")
     obs, action, reward, next_obs, done, indices, weights = replay_buffer.sample(batch_size, beta)
     obs, action, reward, next_obs, done, weights \
         = obs.float().to(device), action.to(device), reward.to(device), next_obs.float().to(device), done.to(device), weights.to(device)
@@ -169,7 +174,8 @@ if __name__=="__main__":
                 action=(camp,action)
                 next_obs, reward, done, _ = env.step(action)
                 total_reward += reward
-                action_num= ((action[1][1]-10)//10)*10+int((action[1][0]-0.5)*2)#action=((theta-10)//10)*10+((velocity-0.5)/0.5)
+                #action=((theta-45)//5)*9+int((velocity-2)*4)
+                action_num= ((action[1][1]-45)//5)*9+int((action[1][0]-2)*4)
                 replay_buffer.push([torch.from_numpy(obs.astype(np.float32)).clone(), action_num, reward, torch.from_numpy(next_obs.astype(np.float32)).clone(), done])
                 obs = next_obs
 
@@ -186,5 +192,8 @@ if __name__=="__main__":
         print('Episode: {},  Step: {},  Reward: {}'.format(episode + 1, step + 1, total_reward))
         rewards.append(total_reward)
         if episode%SAVE_NUM==0:
+            x=[i for i in range(len(rewards))]
+            plt.plot(x,rewards,"bo")
+            plt.savefig("graphs/{:0=6}.png".format(episode))
             torch.save(net, 'models/model_{:0=6}.pt'.format(episode))
             torch.save(target_net, 'models/target_model_{:0=6}.pt'.format(episode))

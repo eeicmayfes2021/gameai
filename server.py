@@ -14,13 +14,13 @@ sio = socketio.AsyncServer(async_mode='aiohttp')#,logger=True, engineio_logger=T
 app = web.Application()
 sio.attach(app)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net_load =  torch.load("models/model_049000.pt") #34000あたりが一番強そう…（謎）
+net_load =  torch.load("models/model_016000.pt") #34000あたりが一番強そう…（謎）
 
 WIDTH=600
 HEIGHT=1000
 BALL_RADIUS=30
 FRICTION=0.01
-STONE_NUM=8
+STONE_NUM=5
 class Stone:
     def __init__(self,camp,v,theta):
         self.camp=camp

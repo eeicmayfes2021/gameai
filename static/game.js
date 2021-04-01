@@ -6,6 +6,7 @@ const playerImage = $('#player-image')[0];
 let playercursor=90;
 let playervelocity=3;
 let data_storage=null;
+const FRICTION=0.01
 //球を打つ
 function fillarc(x,y,size,color){
     context.fillStyle =color;
@@ -42,7 +43,7 @@ function rewriteSituation(data){
 }
 function writePointer(theta,velocity){
     rewriteSituation(data_storage);//再描写（いい方法があれば変えたい…）
-    var length=velocity*100;
+    var length=velocity*(velocity/FRICTION)/2;
     context.lineWidth = 5;
     var endx=canvas.width/2+length*Math.cos(theta*(Math.PI/180));
     var endy=canvas.height-length*Math.sin(theta*(Math.PI/180));
@@ -68,19 +69,19 @@ $(document).ready(function(){
         $(document).on('keydown keyup', (event) => {
             //console.log("keydown,keyup");
             if(event.key === 'ArrowLeft'&& event.type === 'keydown'){
-                if(playercursor<170)playercursor+=1;
+                if(playercursor<135)playercursor+=1;
                 writePointer(playercursor,playervelocity);
             }
             if(event.key === 'ArrowRight'&& event.type === 'keydown'){
-                if(playercursor>10)playercursor-=1;
+                if(playercursor>45)playercursor-=1;
                 writePointer(playercursor,playervelocity);
             }
             if(event.key === 'ArrowDown'&& event.type === 'keydown'){
-                if(playervelocity>0.5)playervelocity-=0.5;
+                if(playervelocity>2)playervelocity-=0.25;
                 writePointer(playercursor,playervelocity);
             }
             if(event.key === 'ArrowUp'&& event.type === 'keydown'){
-                if(playervelocity<5)playervelocity+=0.5;
+                if(playervelocity<4)playervelocity+=0.25;
                 writePointer(playercursor,playervelocity);
             }
             if(event.key === ' ' && event.type === 'keydown'){
