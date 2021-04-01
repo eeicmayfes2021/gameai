@@ -3,7 +3,6 @@ import random
 import cv2
 import gym
 import matplotlib.pyplot as plt
-from matplotlib import animation
 import numpy as np
 
 import torch
@@ -14,6 +13,7 @@ import curlingenv
 
 env = gym.make('curlingenv-v0')
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+STONE_NUM=5 #envのstone_numと合わせる
 
 class PrioritizedReplayBuffer(object):
     def __init__(self, buffer_size):
@@ -64,13 +64,13 @@ class CNNQNetwork(nn.Module):
         self.n_action = n_action
         
         self.fc_state = nn.Sequential(
-            nn.Linear(32, 16),
+            nn.Linear(STONE_NUM*4, 16),
             nn.ReLU(),
             nn.Linear(16, 1)
         )
 
         self.fc_advantage = nn.Sequential(
-            nn.Linear(32, 16),
+            nn.Linear(STONE_NUM*4, 16),
             nn.ReLU(),
             nn.Linear(16, n_action)
         )
@@ -93,8 +93,8 @@ class CNNQNetwork(nn.Module):
             with torch.no_grad():
                 action = self.forward(obs.unsqueeze(0))[0]
                 #出力をvelocity=0.5~5,theta=10~170に制限する
-                action[0]=zerotoone(sigmoid(action[0]/100),0.5,5)
-                action[1]=zerotoone(sigmoid(action[1]/100),10,170)
+                action[0]=zerotoone(sigmoid(action[0]/10),2,4)
+                action[1]=zerotoone(sigmoid(action[1]/10),10,170)
                 action=action.to(device).detach().numpy().copy()
                 #print("action:",action)
         #print("action:",action)
@@ -107,7 +107,7 @@ replay_buffer = PrioritizedReplayBuffer(buffer_size)
 
 net = CNNQNetwork(env.observation_space.shape, n_action=2).to(device)
 target_net = CNNQNetwork(env.observation_space.shape, n_action=2).to(device)
-target_update_interval = 20#00
+target_update_interval = 2000
 
 
 optimizer = optim.Adam(net.parameters(), lr=1e-4) 
@@ -115,7 +115,8 @@ loss_func = nn.SmoothL1Loss(reduction='none')
 
 gamma = 0.99
 batch_size = 32
-n_episodes = 300
+n_episodes = 30000 #100000とかでやりたい
+SAVE_NUM=1000
 
 beta_begin = 0.4
 beta_end = 1.0
@@ -143,7 +144,7 @@ def update(batch_size, beta):
     for r in reward_np:
         two_reward.append([r,r])
     two_reward=torch.Tensor(two_reward )
-    target_q_values = two_reward + gamma * q_values_next * (1 - done)
+    target_q_values = two_reward + gamma * q_values_next #* (1 - done) #ここでバグ
     
     two_weights=[]
     for r in weights:
@@ -198,6 +199,9 @@ if __name__=="__main__":
 
         print('Episode: {},  Step: {},  Reward: {}'.format(episode + 1, step + 1, total_reward))
         rewards.append(total_reward)
-
-    torch.save(net, "model.pt")
-    torch.save(target_net, "target_model.pt")
+        if episode%SAVE_NUM==0:
+            x=[i for i in range(len(rewards))]
+            plt.plot(x,rewards,"bo")
+            plt.savefig("graphs/continuous_{:0=6}.png".format(episode))
+            torch.save(net, 'models/continuous_model_{:0=6}.pt'.format(episode))
+            torch.save(target_net, 'models/continuous_target_model_{:0=6}.pt'.format(episode))

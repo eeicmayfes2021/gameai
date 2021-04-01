@@ -8,3 +8,4 @@ curlingenv/__pycache__
 *.pt
 /__pycache__
 *.ipynb
+graphs/*
