@@ -14,7 +14,7 @@ sio = socketio.AsyncServer(async_mode='aiohttp')#,logger=True, engineio_logger=T
 app = web.Application()
 sio.attach(app)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net_load =  torch.load("models/model_003000.pt")
+net_load =  torch.load("models/model_049000.pt") #34000あたりが一番強そう…（謎）
 
 WIDTH=600
 HEIGHT=1000
@@ -56,7 +56,7 @@ class Stone:
             return
         #衝突している時
         #運動方程式解いた
-        e=np.array([self.x-other.x,self.y-other.y])/dist
+        e=np.divide(np.array([self.x-other.x,self.y-other.y]), dist, where=dist!=0)
         t=np.dot(self.v,e)-np.dot(other.v,e)
         self.v=self.v-t*e
         other.v=self.v+t*e
@@ -120,7 +120,7 @@ async def hit_stone(sid,data):
     situations[sid].append( Stone("you",data["velocity"],data["theta"]) )
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
-        sio.sleep(10)
+        await sio.sleep(0.001)
         stillmove = False
         for stone in situations[sid]:
             stone.move()
@@ -137,7 +137,7 @@ async def hit_stone(sid,data):
     
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
-        sio.sleep(10)
+        await sio.sleep(0.001)
         stillmove = False
         for stone in situations[sid]:
             stone.move()

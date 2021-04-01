@@ -7,3 +7,4 @@ curlingenv/__pycache__
 /logs
 *.pt
 /__pycache__
+*.ipynb
