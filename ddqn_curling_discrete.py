@@ -15,6 +15,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
 
 env = gym.make('curlingenv-v0')
+STONE_NUM=8
 
 class PrioritizedReplayBuffer(object):
     def __init__(self, buffer_size):
@@ -67,12 +68,12 @@ class CNNQNetwork(nn.Module):
         self.n_action = n_action
 
         self.fc_state = nn.Sequential(
-            nn.Linear(32, 64),
+            nn.Linear(STONE_NUM*4, 64),
             nn.ReLU(),
             nn.Linear(64, 1)
         )
         self.fc_advantage = nn.Sequential(
-            nn.Linear(32, 64),
+            nn.Linear(STONE_NUM*4, 64),
             nn.ReLU(),
             nn.Linear(64, n_action)
         )
@@ -113,8 +114,8 @@ loss_func = nn.SmoothL1Loss(reduction='none')
 
 gamma = 0.99 
 batch_size = 32
-n_episodes = 3000 #100000とかでやりたい
-SAVE_NUM=100
+n_episodes = 100000 #100000とかでやりたい
+SAVE_NUM=1000
 
 beta_begin = 0.4
 beta_end = 1.0

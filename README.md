@@ -1,22 +1,28 @@
 # mayfes20201-gameai
 ## 開発方法
+models以下に
+https://drive.google.com/drive/folders/1vk-7_WMdSPf_ULpmY1LY4dX0Ek6Ebx1S?usp=sharing
+から好きなモデルを持ってきて配置する．
+
 ```bash
 $ npm install
 $ pip install aiohttp
 $ pip install python-socketio
 pip install git+https://github.com/openai/gym
 $ pip install torch
-$ python ddqn_curling_discrete.py #(機械学習によるmodel.ptの生成)
 $ python server.py
 ```
 
-model_xxxxxx.ptは生成に時間がかかるので，フロントエンドの動きだけ見たい時などはddqn_curling_discrete.pyを実行してepisode1が終わったらすぐ終了して，model_000000.ptを使ってやってもいいでしょう．
-
+## 機械学習によるモデルの生成
+```
+$ python ddqn_curling_discrete.py #(機械学習によるmodel.ptの生成)
+```
+生成したモデルを使うときは
 server.pyの
 ```
 net_load =  torch.load("models/model_003000.pt")
 ```
-の変更を忘れずに！
+部分の変更を忘れずに！
 ## メモ
 以下のことはまだやらなくても動きます（後で追加したいのでメモ）
 [three.js](http://threejs.org/build/three.js)をダウンロードしてstaticに配置する
