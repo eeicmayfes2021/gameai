@@ -97,7 +97,7 @@ async def background_task():
 
 async def index(request):
     """Serve the client-side application."""
-    with open('static/index.html') as f:
+    with open('dist/index.html') as f:
         return web.Response(text=f.read(), content_type='text/html')
 
 @sio.event
@@ -180,7 +180,7 @@ async def hit_stone(sid,data):
 def disconnect(sid):
     print('disconnect ', sid)
 
-app.router.add_static('/static', 'static')
+app.router.add_static('/dist', 'dist')
 app.router.add_static('/node_modules', 'node_modules')
 app.router.add_get('/', index)
 
