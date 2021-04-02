@@ -6,6 +6,7 @@ https://drive.google.com/drive/folders/1vk-7_WMdSPf_ULpmY1LY4dX0Ek6Ebx1S?usp=sha
 
 ```bash
 $ npm install
+$ npm run build
 $ pip install aiohttp
 $ pip install python-socketio
 pip install git+https://github.com/openai/gym
