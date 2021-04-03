@@ -19,6 +19,19 @@ episode_num=1000000
 SAVE_NUM=10000 #モデルを保存する
 EVAL_NUM=10000 #モデルを評価する
 
+model = tf.keras.models.load_model('models/eval_obs_picture_080000')
+"""
+tf.keras.models.Sequential([
+  #tf.keras.layers.Flatten(),
+  tf.keras.layers.InputLayer(input_shape=(2*(HEIGHT//20)*(WIDTH//20),)),
+  tf.keras.layers.Dense((HEIGHT//20)*(HEIGHT//20), activation=tf.nn.relu),
+  tf.keras.layers.Dropout(0.2),
+  tf.keras.layers.Dense(STONE_NUM*2+1, activation=tf.nn.softmax)
+])
+model.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+"""
 
 #対戦型の環境にする方法がわからない…
 class Stone:
@@ -115,21 +128,63 @@ def movestones(stones):
     if not stillmove:
         return
 
+def choiceSecond(stones):#後攻を選ぶ
+    max_velocity=-1
+    max_theta=-1
+    max_score=-1001001001
+    obs_list=[]
+    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
+        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+            temp_stones=copy.deepcopy(stones)
+            temp_stones.append(Stone("AI",velocity,theta))
+            movestones(temp_stones)
+            obs=stonesToObs(temp_stones)
+            obs_list.append(obs)
+    #https://note.nkmk.me/python-tensorflow-keras-basics/
+    next_score_probs=model.predict(np.asarray(obs_list))
+    itr=0
+    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
+        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+            next_score=0.0
+            for i in range(STONE_NUM*2+1):
+                next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
+            #print(next_score)
+            if next_score>max_score:
+                max_score=next_score
+                max_theta=theta
+                max_velocity=velocity
+            itr+=1
+    return max_velocity,max_theta
 
+def choiceFirst(stones):#先攻を選ぶ
+    max_velocity=-1
+    max_theta=-1
+    max_score=-1001001001
+    obs_list=[]
+    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
+        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+            temp_stones=copy.deepcopy(stones)
+            temp_stones.append(Stone("AI",velocity,theta))
+            movestones(temp_stones)
+            obs=stonesToObs(temp_stones)
+            obs_list.append(obs)
+    #https://note.nkmk.me/python-tensorflow-keras-basics/
+    next_score_probs=model.predict(np.asarray(obs_list))
+    itr=0
+    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
+        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+            next_score=0.0
+            for i in range(STONE_NUM*2+1):
+                next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
+            next_score=-next_score #先攻なので！
+            #print(next_score)
+            if next_score>max_score:
+                max_score=next_score
+                max_theta=theta
+                max_velocity=velocity
+            itr+=1
+    return max_velocity,max_theta
 
-model = tf.keras.models.load_model('models/eval_obs_picture_080000')
-"""
-tf.keras.models.Sequential([
-  #tf.keras.layers.Flatten(),
-  tf.keras.layers.InputLayer(input_shape=(2*(HEIGHT//20)*(WIDTH//20),)),
-  tf.keras.layers.Dense((HEIGHT//20)*(HEIGHT//20), activation=tf.nn.relu),
-  tf.keras.layers.Dropout(0.2),
-  tf.keras.layers.Dense(STONE_NUM*2+1, activation=tf.nn.softmax)
-])
-model.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-"""
 scores_list=[]
 for episode in range(episode_num):
     #ランダムに一回プレイする
@@ -172,32 +227,8 @@ for episode in range(episode_num):
                     stones.append(Stone(camp,velocity,theta))
                     movestones(stones) 
                 else:
-                    max_velocity=-1
-                    max_theta=-1
-                    max_score=-1001001001
-                    obs_list=[]
-                    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
-                        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
-                            temp_stones=copy.deepcopy(situations[sid])
-                            temp_stones.append(Stone("AI",velocity,theta))
-                            movestones(temp_stones)
-                            obs=stonesToObs(temp_stones)
-                            obs_list.append(obs)
-                    #https://note.nkmk.me/python-tensorflow-keras-basics/
-                    next_score_probs=model_load.predict(np.asarray(obs_list))
-                    itr=0
-                    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
-                        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
-                            next_score=0.0
-                            for i in range(STONE_NUM*2+1):
-                                next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
-                            #print(next_score)
-                            if next_score>max_score:
-                                max_score=next_score
-                                max_theta=theta
-                                max_velocity=velocity
-                            itr+=1
-                    stones.append(Stone(camp,max_velocity,max_theta))
+                    velocity,theta=choiceSecond(stones)
+                    stones.append(Stone(camp,velocity,theta))
                     movestones(stones) 
                 side=-side
             score=-calculatePoint(stones)
