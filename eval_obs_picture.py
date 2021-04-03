@@ -1,3 +1,7 @@
+##############
+##メンテナンスしていないので回さないでください
+##eval_obsの方を開発しています．
+##############
 import sys
 import math
 import numpy as np
