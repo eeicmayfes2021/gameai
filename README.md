@@ -2,7 +2,7 @@
 ## 開発方法
 models以下に
 https://drive.google.com/drive/folders/1vk-7_WMdSPf_ULpmY1LY4dX0Ek6Ebx1S?usp=sharing
-から好きなモデルを持ってきて配置する．
+から好きなモデルの**フォルダ**を持ってきて配置する．
 
 ```bash
 $ npm install
@@ -11,17 +11,18 @@ $ pip install aiohttp
 $ pip install python-socketio
 pip install git+https://github.com/openai/gym
 $ pip install torch
+$ pip install tensorflow
 $ python server.py
 ```
 
 ## 機械学習によるモデルの生成
 ```
-$ python ddqn_curling_discrete.py #(機械学習によるmodel.ptの生成)
+$ python eval_obs.py
 ```
 生成したモデルを使うときは
 server.pyの
 ```
-net_load =  torch.load("models/model_003000.pt")
+model_load= tf.keras.models.load_model('models/eval_obs_000010')
 ```
 部分の変更を忘れずに！
 ## メモ

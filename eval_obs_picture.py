@@ -118,15 +118,16 @@ def calculatePoint(stones):
     return score
 
 def movestones(stones):
-    stillmove = False
-    for stone in stones:
-        stone.move()
-        if stone.v[0]!=0 or stone.v[1]!=0:
-            stillmove=True
-    for pair in itertools.combinations(stones, 2): #衝突判定
-        pair[0].collision(pair[1])
-    if not stillmove:
-        return
+    while True:
+        stillmove = False
+        for stone in stones:
+            stone.move()
+            if stone.v[0]!=0 or stone.v[1]!=0:
+                stillmove=True
+        for pair in itertools.combinations(stones, 2): #衝突判定
+            pair[0].collision(pair[1])
+        if not stillmove:
+            return
 
 def choiceSecond(stones):#後攻を選ぶ
     max_velocity=-1
