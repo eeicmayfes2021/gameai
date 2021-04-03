@@ -16,7 +16,7 @@ sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=
 app = web.Application()
 sio.attach(app)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model_load= tf.keras.models.load_model('models/eval_obs_100000')
+model_load= tf.keras.models.load_model('models/eval_obs_000030')
 
 WIDTH=600
 HEIGHT=1000

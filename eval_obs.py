@@ -12,14 +12,21 @@ HEIGHT=1000
 BALL_RADIUS=30
 FRICTION=0.01
 STONE_NUM=5
+velocity_choices=[2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]
+theta_choices=[i for i in range(45,136,5)]
 
-episode_num=1000000
-SAVE_NUM=10000 #モデルを保存する
-EVAL_NUM=10000 #モデルを評価する
+episode_num=1000
+match_per_episode=1000
+SAVE_NUM=10 #モデルを保存する
+EVAL_NUM=10 #モデルを評価する
 
-model =  tf.keras.models.load_model('models/eval_obs_100000')
-"""
-tf.keras.models.Sequential([
+#ランダムと
+epsilon_begin = 1.0
+epsilon_end = 0.3
+epsilon_decay = episode_num
+epsilon_func = lambda step: max(epsilon_end, epsilon_begin - (epsilon_begin - epsilon_end) * (step / epsilon_decay))
+
+model = tf.keras.models.Sequential([
   #tf.keras.layers.Flatten(),
   tf.keras.layers.InputLayer(input_shape=(STONE_NUM*4,)),
   tf.keras.layers.Dense(STONE_NUM*4, activation=tf.nn.relu),
@@ -29,10 +36,7 @@ tf.keras.models.Sequential([
 model.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
-"""
 
-
-#対戦型の環境にする方法がわからない…
 class Stone:
     def __init__(self,camp,v,theta):
         self.camp=camp
@@ -134,8 +138,8 @@ def choiceSecond(stones):#後攻を選ぶ
     max_theta=-1
     max_score=-1001001001
     obs_list=[]
-    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
-        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+    for velocity in velocity_choices:
+        for theta in theta_choices:
             temp_stones=copy.deepcopy(stones)
             temp_stones.append(Stone("AI",velocity,theta))
             movestones(temp_stones)
@@ -144,8 +148,8 @@ def choiceSecond(stones):#後攻を選ぶ
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     next_score_probs=model.predict(np.asarray(obs_list))
     itr=0
-    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
-        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+    for velocity in velocity_choices:
+        for theta in theta_choices:
             next_score=0.0
             for i in range(STONE_NUM*2+1):
                 next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
@@ -162,8 +166,8 @@ def choiceFirst(stones):#先攻を選ぶ
     max_theta=-1
     max_score=-1001001001
     obs_list=[]
-    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
-        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+    for velocity in velocity_choices:
+        for theta in theta_choices:
             temp_stones=copy.deepcopy(stones)
             temp_stones.append(Stone("AI",velocity,theta))
             movestones(temp_stones)
@@ -172,8 +176,8 @@ def choiceFirst(stones):#先攻を選ぶ
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     next_score_probs=model.predict(np.asarray(obs_list))
     itr=0
-    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
-        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+    for velocity in velocity_choices:
+        for theta in theta_choices:
             next_score=0.0
             for i in range(STONE_NUM*2+1):
                 next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
@@ -189,29 +193,35 @@ def choiceFirst(stones):#先攻を選ぶ
 
 scores_list=[]
 for episode in range(episode_num):
-    #ランダムに一回プレイする
-    stones=[]
-    side=1
+    print("episode:",episode)
     obs_list=[]
-    while len(stones)<STONE_NUM*2:
-        #Stoneをランダムに追加
-        #check!:ここはゲームの仕様によって変える
-        velocity=random.choice( [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0] )#2~4,0.25刻み
-        theta=random.randrange(45,136,5)#45,50,55,...,135
-        camp= "you" if side==1 else "AI"
-        stones.append(Stone(camp,velocity,theta))
-        #運動
-        movestones(stones)
-        #obs_listに記録
-        obs_list.append(stonesToObs(stones))
-        side=-side
-    #(後攻にとっての)終局時の得点を計算
-    score=calculatePoint(stones)
-    score=-score#後攻にとってのreward
-    #終局時の点数と各状況を紐付けてネットワークを学習させる
-    scores=np.asarray([score+STONE_NUM for i in range(len(obs_list))],dtype=np.uint8) #rewardの番号
+    scores=[]
+    for match in range(match_per_episode):
+        #一回プレイする
+        stones=[]
+        side=1
+        while len(stones)<STONE_NUM*2:
+            camp= "you" if side==1 else "AI"
+            if random.random()<epsilon_func(episode):#Stoneをランダムに追加
+                velocity=random.choice( velocity_choices )
+                theta=random.choice( theta_choices )
+            else: #評価関数に従って追加
+                velocity,theta= choiceFirst(stones) if side==1 else choiceSecond(stones)    
+            stones.append(Stone(camp,velocity,theta))
+            #運動
+            movestones(stones)
+            #obs_listに記録
+            obs_list.append(stonesToObs(stones))
+            side=-side
+        #(後攻にとっての)終局時の得点を計算
+        score=calculatePoint(stones)
+        score=-score#後攻にとってのreward
+        #終局時の点数と各状況を紐付けてネットワークを学習させる
+        for i in range(STONE_NUM*2):
+            scores.append(score+STONE_NUM)
     obs_list=np.asarray(obs_list,dtype=np.float32)
-    model.fit(obs_list,scores,epochs=1)
+    scores=np.asarray(scores)
+    model.fit(obs_list,scores,epochs=5)
     #EVAL_NUMエピソードごとに10回プレイした平均点を記録してplot
     if episode%EVAL_NUM==0:
         print("evaluating...",episode)
@@ -235,14 +245,12 @@ for episode in range(episode_num):
                 side=-side
             score=-calculatePoint(stones)
             total_score+=score
-            print(play)
         print("average_score:",total_score/plays)
         scores_list.append(total_score/plays)
         x=[i*EVAL_NUM for i in range(len(scores_list))]
         plt.plot(x,scores_list,'b+')
-        plt.savefig("graphs/eval_obs2.png")
-        print("evaluated!")
+        plt.savefig("graphs/eval_obs.png")
     #SAVE_NUMエピソードごとにモデルを保存 https://www.tensorflow.org/guide/saved_model
     if episode%SAVE_NUM==0:
-        tf.saved_model.save(model, 'models/eval_obs_{:0=6}/'.format(episode+100000))
-        print("saved ",'models/eval_obs_{:0=6}/'.format(episode+100000))
+        tf.saved_model.save(model, 'models/eval_obs_{:0=6}/'.format(episode))
+        print("saved ",'models/eval_obs_{:0=6}/'.format(episode))
