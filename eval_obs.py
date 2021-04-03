@@ -15,8 +15,8 @@ STONE_NUM=5
 velocity_choices=[2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]
 theta_choices=[i for i in range(45,136,5)]
 
-episode_num=1000
-match_per_episode=1000
+episode_num=100000
+match_per_episode=100
 SAVE_NUM=10 #モデルを保存する
 EVAL_NUM=10 #モデルを評価する
 
@@ -123,15 +123,16 @@ def calculatePoint(stones):
     return score
 
 def movestones(stones):
-    stillmove = False
-    for stone in stones:
-        stone.move()
-        if stone.v[0]!=0 or stone.v[1]!=0:
-            stillmove=True
-    for pair in itertools.combinations(stones, 2): #衝突判定
-        pair[0].collision(pair[1])
-    if not stillmove:
-        return
+    while True:
+        stillmove = False
+        for stone in stones:
+            stone.move()
+            if stone.v[0]!=0 or stone.v[1]!=0:
+                stillmove=True
+        for pair in itertools.combinations(stones, 2): #衝突判定
+            pair[0].collision(pair[1])
+        if not stillmove:
+            return
 
 def choiceSecond(stones):#後攻を選ぶ
     max_velocity=-1
@@ -221,7 +222,7 @@ for episode in range(episode_num):
             scores.append(score+STONE_NUM)
     obs_list=np.asarray(obs_list,dtype=np.float32)
     scores=np.asarray(scores)
-    model.fit(obs_list,scores,epochs=5)
+    model.fit(obs_list,scores,epochs=10)
     #EVAL_NUMエピソードごとに10回プレイした平均点を記録してplot
     if episode%EVAL_NUM==0:
         print("evaluating...",episode)
@@ -237,11 +238,10 @@ for episode in range(episode_num):
                     velocity=random.choice( [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0] )#2~4,0.25刻み
                     theta=random.randrange(45,136,5)#45,50,55,...,135
                     stones.append(Stone(camp,velocity,theta))
-                    movestones(stones) 
                 else:
                     velocity,theta=choiceSecond(stones)
                     stones.append(Stone(camp,velocity,theta))
-                    movestones(stones) 
+                movestones(stones) 
                 side=-side
             score=-calculatePoint(stones)
             total_score+=score
