@@ -7,14 +7,16 @@ import numpy as np
 import random
 import torch
 from torch import nn, optim
+import tensorflow as tf
+import copy
 
 from ddqn_curling_discrete import CNNQNetwork
 
-sio = socketio.AsyncServer(async_mode='aiohttp')#,logger=True, engineio_logger=True
+sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net_load =  torch.load("models/model_016000.pt") #34000あたりが一番強そう…（謎）
+model_load= tf.keras.models.load_model('models/eval_obs_100000') #34000あたりが一番強そう…（謎）
 
 WIDTH=600
 HEIGHT=1000
@@ -69,21 +71,31 @@ class Stone:
             'radius':self.radius,
             'camp':self.camp}
 
+#stonesToObsとmovestonesはモデルと同じにする
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
-    obs=np.array([-1 for i in range(STONE_NUM*4)])
+    obs=np.array([-1 for i in range(STONE_NUM*4)],dtype=np.float32)
     i_you=0
     i_AI=STONE_NUM
     for stone in stones:
-        if stone.camp=='you' and i_you<STONE_NUM:
-            obs[i_you*2]=stone.x
-            obs[i_you*2+1]=stone.y
+        if stone.camp=='you' and i_you<STONE_NUM:#check!正規化するかどうか？
+            obs[i_you*2]=stone.x/WIDTH
+            obs[i_you*2+1]=stone.y/HEIGHT
             i_you+=1
         if stone.camp=='AI' and i_AI<STONE_NUM*2:
-            obs[i_AI*2]=stone.x
-            obs[i_AI*2+1]=stone.y
+            obs[i_AI*2]=stone.x/WIDTH
+            obs[i_AI*2+1]=stone.y/HEIGHT
             i_AI+=1
     return obs
-
+def movestones(stones):
+    stillmove = False
+    for stone in stones:
+        stone.move()
+        if stone.v[0]!=0 or stone.v[1]!=0:
+            stillmove=True
+    for pair in itertools.combinations(stones, 2): #衝突判定
+        pair[0].collision(pair[1])
+    if not stillmove:
+        return
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
 
@@ -131,9 +143,32 @@ async def hit_stone(sid,data):
         if not stillmove:
             break
     #相手が打つ
-    obs=stonesToObs(situations[sid])
-    action = net_load.act(torch.from_numpy(obs.astype(np.float32)).clone().float().to(device),0)
-    situations[sid].append( Stone("AI",action[0],action[1]) )
+    max_velocity=-1
+    max_theta=-1
+    max_score=-1001001001
+    obs_list=[]
+    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
+        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+            temp_stones=copy.deepcopy(situations[sid])
+            temp_stones.append(Stone("AI",velocity,theta))
+            movestones(temp_stones)
+            obs=stonesToObs(temp_stones)
+            obs_list.append(obs)
+    #https://note.nkmk.me/python-tensorflow-keras-basics/
+    next_score_probs=model_load.predict(np.asarray(obs_list))
+    itr=0
+    for velocity in [2.0,2.25,2.5,2.75,3.0,3.25,3.5,3.75,4.0]:##check!:ここはゲームの仕様によって変える
+        for theta in [i for i in range(45,136,5)]:#check!:ここはゲームの仕様によって変える
+            next_score=0.0
+            for i in range(STONE_NUM*2+1):
+                next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
+            #print(next_score)
+            if next_score>max_score:
+                max_score=next_score
+                max_theta=theta
+                max_velocity=velocity
+            itr+=1
+    situations[sid].append(Stone("AI",max_velocity,max_theta))
     
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
