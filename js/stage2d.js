@@ -10,28 +10,11 @@ export class Stage2D {
         this.canvas = document.getElementById(canvasId);
 
         this.context = this.canvas.getContext('2d');
-        this.data_storage = null;
+        
+        this.stones = [];
     }
 
-    /**
-     * Fill arc.
-     * @param {number} x center x
-     * @param {number} y center y
-     * @param {number} size arc radius
-     * @param {string} color arc color
-     */
-    fillarc(x, y, size, color) {
-        this.context.fillStyle = color;
-        this.context.beginPath();
-        this.context.arc(x, y, size, 0, 2 * Math.PI);
-        this.context.closePath();
-        this.context.fill();
-    }
-
-    /**
-     * Clear and write stage.
-     */
-    clearAndWriteStage() {
+    _drawBase() {
         this.context.save();
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.context.lineWidth = 10;
@@ -39,53 +22,78 @@ export class Stage2D {
         this.context.rect(0, 0, this.canvas.width, this.canvas.height);
         this.context.closePath();
         this.context.stroke(); 
-        this.fillarc(this.canvas.width / 2, this.canvas.height / 2, 250, 'darkblue');
-        this.fillarc(this.canvas.width / 2, this.canvas.height / 2, 200, 'white');
-        this.fillarc(this.canvas.width / 2, this.canvas.height / 2, 100, 'brown');
-        this.fillarc(this.canvas.width / 2, this.canvas.height / 2, 50, 'white');
+        this._fillarc(this.canvas.width / 2, this.canvas.height / 2, 250, 'darkblue');
+        this._fillarc(this.canvas.width / 2, this.canvas.height / 2, 200, 'white');
+        this._fillarc(this.canvas.width / 2, this.canvas.height / 2, 100, 'brown');
+        this._fillarc(this.canvas.width / 2, this.canvas.height / 2, 50, 'white');
         this.context.restore();
     }
-
-    /**
-     * Rewrite stage with given data.
-     * @param {any} data 
-     */
-    rewriteSituation(data) {
-        this.clearAndWriteStage();
-        if(data === null) return;
-        Object.values(data.stones).forEach((stone) => {
+    
+    _drawStones() {
+        this.stones.forEach((stone) => {
             this.context.beginPath();
-            if(stone.camp === 'you') this.context.fillStyle = 'red';
-            else this.context.fillStyle = 'blue';
+            this.context.fillStyle = (stone.camp === 'you') ? 'red' : 'blue';
             this.context.arc(stone.x, this.canvas.height - stone.y, stone.radius, 0, 2 * Math.PI);
             this.context.fill();
         });
     }
+    
+    _drawPointer() {
+        const startX = this.canvas.width / 2;
+        const startY = this.canvas.height;
 
-    /**
-     * Draw pointer.
-     * @param {number} theta 
-     * @param {number} velocity 
-     */
-    writePointer(theta, velocity) {
-        this.rewriteSituation(this.data_storage);//再描写（いい方法があれば変えたい…）
-        const length = velocity * (velocity/FRICTION) / 2;
         this.context.lineWidth = 5;
-        const endx = this.canvas.width/2 + length * Math.cos(theta*(Math.PI/180));
-        const endy = this.canvas.height - length * Math.sin(theta*(Math.PI/180));
         this.context.beginPath();
-        this.context.moveTo(this.canvas.width/2, this.canvas.height);
-        this.context.lineTo(endx, endy);
+        this.context.moveTo(startX, startY);
+        this.context.lineTo(startX + this.pointerX, startY + this.pointerY);
         this.context.closePath();
         this.context.stroke();
         this.context.lineWidth = 10;
     }
     
+    _drawStage() {
+        this._drawBase();
+        this._drawStones();
+        this._drawPointer();
+    }
+
     /**
-     * Update data storage.
+     * Update Stones' positions.
      * @param {any} data 
      */
-    updateDataStorage(data) {
-        this.data_storage = data;
+    updateStones(data) {
+        this.stones = data?.stones ?? [];
+
+        this._drawStage();
+    }
+
+    /**
+     * Update pointer direction and length.
+     * @param {number} theta 
+     * @param {number} velocity 
+     */
+    updatePointer(theta, velocity) {
+        const radTheta = theta * (Math.PI / 180);
+        const length = velocity * (velocity/FRICTION) / 2;
+
+        this.pointerX = length * Math.cos(radTheta);
+        this.pointerY = -length * Math.sin(radTheta);
+
+        this._drawStage();
+    }
+    
+    /**
+     * Fill arc.
+     * @param {number} x center x
+     * @param {number} y center y
+     * @param {number} size arc radius
+     * @param {string} color arc color
+     */
+    _fillarc(x, y, size, color) {
+        this.context.fillStyle = color;
+        this.context.beginPath();
+        this.context.arc(x, y, size, 0, 2 * Math.PI);
+        this.context.closePath();
+        this.context.fill();
     }
 }

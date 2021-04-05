@@ -20,7 +20,7 @@ const onConnect = (received) => {
 const onYourTurn = (data) => {
     playercursor = 90;
     playervelocity = 3;
-    stage.writePointer(playercursor, playervelocity);
+    stage.updatePointer(playercursor, playervelocity);
     
     /** @param {KeyboardEvent} event */
     const onKeyDown = (event) => {
@@ -49,7 +49,7 @@ const onYourTurn = (data) => {
         playercursor = clamp(playercursor, 45, 135);
         playervelocity = clamp(playervelocity, 2, 4);
         
-        stage.writePointer(playercursor, playervelocity);
+        stage.updatePointer(playercursor, playervelocity);
 
         event.preventDefault();
     };
@@ -58,8 +58,7 @@ const onYourTurn = (data) => {
 };
 
 const onMoveStones = (data) => {
-    stage.rewriteSituation(data);
-    stage.updateDataStorage(data);
+    stage.updateStones(data);
 };
 
 const onYouWin = (data) => {

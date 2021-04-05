@@ -83,20 +83,13 @@ export class Stage3D {
     }
 
     /**
-     * Clear and write stage.
-     */
-    clearAndWriteStage() {
-    }
-
-    /**
-     * Rewrite stage with given data.
+     * Update Stones' positions.
      * @param {any} data 
      */
-    rewriteSituation(data) {
-        this.clearAndWriteStage();
+    updateStones(data) {
         if(data === null) return;
 
-        Object.values(data.stones).forEach((stone, i) => {
+        data.stones.forEach((stone, i) => {
             if(i < this.stones.length) {
                 this.stones[i].position.set(-stone.x, 20, stone.y);
             }else {
@@ -129,11 +122,11 @@ export class Stage3D {
     }
 
     /**
-     * Draw pointer.
+     * Update pointer direction and length.
      * @param {number} theta 
      * @param {number} velocity 
      */
-    writePointer(theta, velocity) {
+    updatePointer(theta, velocity) {
         this.line.quaternion.setFromAxisAngle(
             new THREE.Vector3(0, 1, 0),
             theta * THREE.MathUtils.DEG2RAD
@@ -141,13 +134,5 @@ export class Stage3D {
         
         const length = velocity * (velocity/FRICTION) / 2;
         this.line.scale.setScalar(length);
-    }
-    
-    /**
-     * Update data storage.
-     * @param {any} data 
-     */
-    updateDataStorage(data) {
-        this.data_storage = data;
     }
 }
