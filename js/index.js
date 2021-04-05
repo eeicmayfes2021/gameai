@@ -1,10 +1,12 @@
 import { io } from 'socket.io-client';
 
 import { Stage2D } from './stage2d';
+import { Stage3D } from './stage3d';
 import { clamp } from './util';
 
 const socket = io();
-const stage = new Stage2D('canvas-2d');
+// const stage = new Stage2D('canvas-2d');
+const stage = new Stage3D(500, 400, 600, 1000, 'canvas-3d');
 
 let playercursor = 90;
 let playervelocity = 3;
@@ -19,7 +21,7 @@ const onYourTurn = (data) => {
     playercursor = 90;
     playervelocity = 3;
     stage.writePointer(playercursor, playervelocity);
-
+    
     /** @param {KeyboardEvent} event */
     const onKeyDown = (event) => {
         switch(event.key) {
