@@ -32,22 +32,33 @@ def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
             i_AI+=1
     return obs
     
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
+import os
+print(os.cpu_count())
+max_workers=17
+chunk_size=10
+
+def test_multi(m):
+    stones,velocity,theta=m
+    temp_stones=copy.deepcopy(stones)
+    temp_stones.append(Stone("AI",velocity,theta))
+    movestones(temp_stones)
+    obs=stonesToObs(temp_stones)
+    return obs
+
 def choiceSecond(stones):#後攻を選ぶ
     max_velocity=-1
     max_theta=-1
     max_score=-1001001001
     obs_list=[]
     vtheta_list=[]
-    #with ProcessPoolExecutor(max_workers=max_workers) as executor:
+    multi_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            temp_stones=copy.deepcopy(stones)
-            temp_stones.append(Stone("AI",velocity,theta))
-            #executor.submit(movestones,temp_stones)
-            movestones(temp_stones)
-            obs=stonesToObs(temp_stones)
-            obs_list.append(obs)
+            multi_list.append((stones,velocity,theta))
             vtheta_list.append((velocity,theta))
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+          obs_list=list(executor.map(test_multi,multi_list,chunksize=chunk_size))
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     next_score_probs=model_load.predict(np.asarray(obs_list))
     itr=0
@@ -63,21 +74,29 @@ def choiceSecond(stones):#後攻を選ぶ
         itr+=1
     return max_velocity,max_theta
 
+def test_multi2(m):
+    stones,velocity,theta=m
+    temp_stones=copy.deepcopy(stones)
+    temp_stones.append(Stone("AI",velocity,theta))
+    movestones(temp_stones)
+    score=-calculatePoint(temp_stones)
+    return score,velocity,theta
 def choiceSecond_absolute(stones):
     max_velocity=-1
     max_theta=-1
     max_score=-1001001001
+    multi_list=[]
+    score_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            temp_stones=copy.deepcopy(stones)
-            temp_stones.append(Stone("AI",velocity,theta))
-            movestones(temp_stones)
-            score=-calculatePoint(temp_stones)
-            if score>max_score:
-                max_score=score
-                max_velocity=velocity
-                max_theta=theta
-    print(max_velocity,max_theta)
+            multi_list.append((stones,velocity,theta))
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        score_list=list(executor.map(test_multi2,multi_list,chunksize=chunk_size))
+    for score,velocity,theta in score_list:
+        if score>max_score:
+            max_theta=theta
+            max_velocity=velocity
+            max_score=score
     return max_velocity,max_theta
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
