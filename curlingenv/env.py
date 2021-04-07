@@ -54,7 +54,7 @@ class Stone:
             e=np.array([self.x-other.x,self.y-other.y])/dist
         t=np.dot(self.v,e)-np.dot(other.v,e)
         self.v=self.v-t*e
-        other.v=self.v+t*e
+        other.v=other.v+t*e
     def return_dist(self):
         dist=math.sqrt( (self.x-WIDTH/2)**2+(self.y-HEIGHT/2)**2 )
         return dist

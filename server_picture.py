@@ -1,66 +1,63 @@
 from aiohttp import web
 import socketio
 import math
+import threading
 import itertools
 import numpy as np
 import random
+import torch
+from torch import nn, optim
 import tensorflow as tf
 import copy
 
 from ddqn_curling_discrete import CNNQNetwork
 from difinitions import *
-
-
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
-model_load= tf.keras.models.load_model('models/eval_obs_001000')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model_load= tf.keras.models.load_model('models/eval_obs_picture_000150')
+
 
 #stonesToObsとmovestonesはモデルと同じにする
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
-    obs=np.array([-1 for i in range(STONE_NUM*4)],dtype=np.float32)
+    obs=np.array([0 for i in range(2*(HEIGHT//20)*(WIDTH//20))],dtype=np.uint8)
     i_you=0
     i_AI=STONE_NUM
     for stone in stones:
-        if stone.camp=='you' and i_you<STONE_NUM:#check!正規化するかどうか？
-            obs[i_you*2]=stone.x[0]/WIDTH
-            obs[i_you*2+1]=stone.x[1]/HEIGHT
-            i_you+=1
-        if stone.camp=='AI' and i_AI<STONE_NUM*2:
-            obs[i_AI*2]=stone.x[0]/WIDTH
-            obs[i_AI*2+1]=stone.x[1]/HEIGHT
-            i_AI+=1
+        w=min((WIDTH//20)-1,stone.x//20)
+        h=min((HEIGHT//20)-1,stone.y//20)
+        if stone.camp=='you':
+            obs[int(h*(WIDTH//20)+w)]=1
+        else:
+            obs[int((HEIGHT//20)*(WIDTH//20)+h*(WIDTH//20)+w)]=1
     return obs
-    
 def choiceSecond(stones):#後攻を選ぶ
     max_velocity=-1
     max_theta=-1
     max_score=-1001001001
     obs_list=[]
-    vtheta_list=[]
-    #with ProcessPoolExecutor(max_workers=max_workers) as executor:
     for velocity in velocity_choices:
         for theta in theta_choices:
             temp_stones=copy.deepcopy(stones)
             temp_stones.append(Stone("AI",velocity,theta))
-            #executor.submit(movestones,temp_stones)
             movestones(temp_stones)
             obs=stonesToObs(temp_stones)
             obs_list.append(obs)
-            vtheta_list.append((velocity,theta))
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     next_score_probs=model_load.predict(np.asarray(obs_list))
     itr=0
-    for velocity,theta in vtheta_list:
-        next_score=0.0
-        for i in range(STONE_NUM*2+1):
-            next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
-        #print(next_score)
-        if next_score>max_score:
-            max_score=next_score
-            max_theta=theta
-            max_velocity=velocity
-        itr+=1
+    for velocity in velocity_choices:
+        for theta in theta_choices:
+            next_score=0.0
+            for i in range(STONE_NUM*2+1):
+                next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
+            #print(next_score)
+            if next_score>max_score:
+                max_score=next_score
+                max_theta=theta
+                max_velocity=velocity
+            itr+=1
     return max_velocity,max_theta
 
 def choiceSecond_absolute(stones):
