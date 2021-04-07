@@ -8,7 +8,7 @@ import tensorflow as tf
 import copy
 
 from ddqn_curling_discrete import CNNQNetwork
-from difinitions import *
+from definitions import *
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)

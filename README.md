@@ -9,8 +9,6 @@ $ npm install
 $ npm run build
 $ pip install aiohttp
 $ pip install python-socketio
-pip install git+https://github.com/openai/gym
-$ pip install torch
 $ pip install tensorflow
 $ python server.py
 ```

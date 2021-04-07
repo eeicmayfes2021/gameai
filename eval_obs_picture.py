@@ -6,7 +6,7 @@ import random
 import tensorflow as tf
 import copy
 import matplotlib.pyplot as plt
-from difinitions import *
+from definitions import *
 
 episode_num=1000
 match_per_episode=100
