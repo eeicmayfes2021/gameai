@@ -1,12 +1,12 @@
 import { io } from 'socket.io-client';
 
 import { Stage2D } from './stage2d';
-import { Stage3D } from './stage3d';
+// import { Stage3D } from './stage3d';
 import { clamp } from './util';
 
 const socket = io();
-// const stage = new Stage2D('canvas-2d');
-const stage = new Stage3D(500, 400, 600, 1000, 'canvas-3d');
+const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
+// const stage = new Stage3D(500, 400, 600, 1000, 'canvas-3d');
 
 let playercursor = 90;
 let playervelocity = 3;
@@ -71,6 +71,15 @@ const onAIWin = (data) => {
     console.log('AI win! score:', data.score);
     const scoreboard = document.getElementById('scoreboard');
     scoreboard.innerHTML = `${data.score}点であなたの負けです．`;
+};
+
+/**
+ * Handle Flick event.
+ * @param {number} theta 
+ * @param {number} velocity 
+ */
+const onFlick = (theta, velocity) => {
+    socket.emit('hit_stone', { theta, velocity });
 };
 
 window.onload = () => {
