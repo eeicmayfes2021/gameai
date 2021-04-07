@@ -1,12 +1,9 @@
 from aiohttp import web
 import socketio
 import math
-import threading
 import itertools
 import numpy as np
 import random
-import torch
-from torch import nn, optim
 import tensorflow as tf
 import copy
 
@@ -15,7 +12,6 @@ from difinitions import *
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model_load= tf.keras.models.load_model('models/eval_obs_picture_000150')
 
 
@@ -25,8 +21,8 @@ def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
     i_you=0
     i_AI=STONE_NUM
     for stone in stones:
-        w=min((WIDTH//20)-1,stone.x//20)
-        h=min((HEIGHT//20)-1,stone.y//20)
+        w=min((WIDTH//20)-1,stone.x[0]//20)
+        h=min((HEIGHT//20)-1,stone.x[1]//20)
         if stone.camp=='you':
             obs[int(h*(WIDTH//20)+w)]=1
         else:
