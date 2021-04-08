@@ -15,6 +15,8 @@ $ python setup.py build_ext --inplace
 $ python server.py
 ```
 
+## ゲームバランスの調整の仕方
+球の個数や摩擦力や速度・角度の制限などを変えるときは，サーバ側では`cdefinitions.pyx`と`variables.py`，クライアント側では`index.js`を変更する必要があります（cpdefの変数がpython側から認識できないため…）
 ## 機械学習によるモデルの生成
 ```
 $ python eval_obs.py
