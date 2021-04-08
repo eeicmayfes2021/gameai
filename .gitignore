@@ -10,3 +10,5 @@ curlingenv/__pycache__
 graphs/*
 dist/*
 models/*
+cdefinitions.cpython-37m-darwin.so
+cdefinitions.c

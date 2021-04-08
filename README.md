@@ -10,6 +10,8 @@ $ npm run build
 $ pip install aiohttp
 $ pip install python-socketio
 $ pip install tensorflow
+$ pip install cpython
+$ python setup.py build_ext --inplace
 $ python server.py
 ```
 
@@ -28,4 +30,8 @@ model_load= tf.keras.models.load_model('models/eval_obs_000010')
 [three.js](http://threejs.org/build/three.js)をダウンロードしてstaticに配置する
 
 [フォント](https://raw.githubusercontent.com/mrdoob/three.js/master/examples/fonts/helvetiker_bold.typeface.json)をダウンロードしてstaticに配置する。
+
+```
+python setup.py build_ext --inplace
+```
 
