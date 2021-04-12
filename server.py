@@ -25,7 +25,17 @@ while os.path.exists(base_path + str(epoches).zfill(6)):
     epoches += 10
 print("model path: ", model_path)
 # よくないが仮置きしている…
-model_load = tf.keras.models.load_model('model/eval_obs_000010')
+model_load = tf.keras.models.Sequential([
+  #tf.keras.layers.Flatten(),
+  tf.keras.layers.InputLayer(input_shape=(STONE_NUM*4,)),
+  tf.keras.layers.Dense(STONE_NUM*4, activation=tf.nn.relu),
+  tf.keras.layers.Dropout(0.2),
+  tf.keras.layers.Dense(STONE_NUM*2+1, activation=tf.nn.softmax)
+])
+model_load.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+# tf.keras.models.load_model('models/eval_obs_000010')
 
 if model_path:
     print("find model")
