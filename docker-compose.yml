@@ -1,0 +1,12 @@
+version: '3'
+services:
+  web:
+    build: .
+    working_dir: '/usr/src/app'
+    tty: true
+    ports:
+      - "8080:8080"
+    expose:
+      - 8080
+    command:
+      python server.py
