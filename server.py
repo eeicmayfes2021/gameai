@@ -77,6 +77,7 @@ def choiceSecond_absolute(stones):
     max_theta=-1
     max_score=-1001001001
     score_list=[]
+    obs_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
             obs_list.append( test_multi2((stones,velocity,theta)) )
