@@ -6,6 +6,7 @@ import numpy as np
 import random
 import tensorflow as tf
 import copy
+import os
 
 from cdefinitions import *
 from variables import *
@@ -13,7 +14,23 @@ from variables import *
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
-model_load= tf.keras.models.load_model('models/eval_obs_002160')
+# model_load= tf.keras.models.load_model('models/eval_obs_002160')
+
+epoches = 0
+base_path = "./models/eval_obs_"
+model_path = ""
+print("search models")
+while os.path.exists(base_path + str(epoches).zfill(6)):
+    model_path = base_path + str(epoches).zfill(6)
+    epoches += 10
+print("model path: ", model_path)
+# よくないが仮置きしている…
+model_load = tf.keras.models.load_model('model/eval_obs_000010')
+
+if model_path:
+    print("find model")
+    flag = False  
+    model_load = tf.keras.models.load_model(model_path)
 
 #stonesToObsとmovestonesはモデルと同じにする
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
@@ -107,6 +124,18 @@ async def index(request):
 def connect(sid, environ):
     print("connect ", sid)
     situations[sid]=[]
+    
+    print("search models")
+    epo = 10
+    new_model_path = ""
+    while os.path.exists(base_path + str(epo).zfill(6)):
+        new_model_path = base_path + str(epo).zfill(6)
+        epo += 10
+    print("model path: ", new_model_path)
+
+    if new_model_path and new_model_path != model_path:
+        print("change model")
+        model_load = tf.keras.models.load_model(new_model_path)
 
 @sio.event
 async def game_start(sid, data): 
