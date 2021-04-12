@@ -9,13 +9,11 @@ const FRICTION = 0.01;
 export class Stage3D {
     /**
      * Initialize Stage2D.
-     * @param {number} screenWidth 
-     * @param {number} screenHeight
      * @param {number} stageWidth
      * @param {number} stageHeight
      * @param {string} appendTo
      */
-    constructor(screenWidth, screenHeight, stageWidth, stageHeight, appendTo) {
+    constructor(stageWidth, stageHeight, appendTo) {
         this.scene = new THREE.Scene();
         this.stageSize = new THREE.Vector2(stageWidth, stageHeight);
         
@@ -23,18 +21,19 @@ export class Stage3D {
         
         this._setupPointer();
         
-        this.camera = new THREE.PerspectiveCamera(75, screenWidth / screenHeight, 10, 10000);
+        /** @type {HTMLCanvasElement} */
+        // @ts-ignore
+        this.canvas = document.getElementById(appendTo);
+        
+        this.camera = new THREE.PerspectiveCamera(75, this.canvas.clientWidth / this.canvas.clientHeight, 10, 10000);
         this.camera.position.set(-this.stageSize.x / 2, 400, -250);
         
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setSize(screenWidth, screenHeight);
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setPixelRatio(window.devicePixelRatio);
-
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        
+        this.controls = new OrbitControls(this.camera, this.canvas);
         this.controls.target = new THREE.Vector3(-this.stageSize.x / 2, 0, this.stageSize.y / 2);
 
-        document.getElementById(appendTo).appendChild(this.renderer.domElement);
-        
         this.stones = [];
         
         this._render();
@@ -78,6 +77,12 @@ export class Stage3D {
     
     _render() {
         requestAnimationFrame(() => { this._render(); });
+        
+        if (this._resizeRendererToDisplaySize()) {
+            this.camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+            this.camera.updateProjectionMatrix();
+        }
+        
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
@@ -134,5 +139,15 @@ export class Stage3D {
         
         const length = velocity * (velocity/FRICTION) / 2;
         this.line.scale.setScalar(length);
+    }
+    
+    // 参考 : https://threejsfundamentals.org/threejs/lessons/ja/threejs-responsive.html
+    _resizeRendererToDisplaySize() {
+        const needResize = this.canvas.width !== this.canvas.clientWidth
+                        || this.canvas.height !== this.canvas.clientHeight;
+        if (needResize) {
+          this.renderer.setSize(this.canvas.clientWidth, this.canvas.clientHeight, false);
+        }
+        return needResize;
     }
 }
