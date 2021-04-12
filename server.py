@@ -13,7 +13,7 @@ from variables import *
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
-model_load= tf.keras.models.load_model('models/eval_obs_001000')
+model_load= tf.keras.models.load_model('models/eval_obs_002160')
 
 #stonesToObsとmovestonesはモデルと同じにする
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
@@ -31,11 +31,6 @@ def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
             i_AI+=1
     return obs
     
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-import os
-print(os.cpu_count())
-max_workers=17
-chunk_size=10
 
 def test_multi(m):
     stones,velocity,theta=m
@@ -51,13 +46,10 @@ def choiceSecond(stones):#後攻を選ぶ
     max_score=-1001001001
     obs_list=[]
     vtheta_list=[]
-    multi_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            multi_list.append((stones,velocity,theta))
             vtheta_list.append((velocity,theta))
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-          obs_list=list(executor.map(test_multi,multi_list,chunksize=chunk_size))
+            obs_list.append( test_multi((stones,velocity,theta)) )
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     next_score_probs=model_load.predict(np.asarray(obs_list))
     itr=0
@@ -84,13 +76,10 @@ def choiceSecond_absolute(stones):
     max_velocity=-1
     max_theta=-1
     max_score=-1001001001
-    multi_list=[]
     score_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            multi_list.append((stones,velocity,theta))
-    with ProcessPoolExecutor(max_workers=max_workers) as executor:
-        score_list=list(executor.map(test_multi2,multi_list,chunksize=chunk_size))
+            obs_list.append( test_multi2((stones,velocity,theta)) )
     for score,velocity,theta in score_list:
         if score>max_score:
             max_theta=theta
@@ -200,3 +189,4 @@ app.router.add_get('/', index)
 if __name__ == '__main__':
     #sio.start_background_task(background_task)
     web.run_app(app)
+

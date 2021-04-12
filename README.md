@@ -11,6 +11,7 @@ $ pip install aiohttp
 $ pip install python-socketio
 $ pip install tensorflow
 $ pip install cpython
+$ pip install --upgrade cython
 $ python setup.py build_ext --inplace
 $ python server.py
 ```
