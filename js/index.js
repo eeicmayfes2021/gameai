@@ -1,4 +1,5 @@
 'use strict';
+import io from 'socket.io-client'
 const socket = io.connect();
 const canvas = $('#canvas-2d')[0];
 const context = canvas.getContext('2d');
