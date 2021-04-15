@@ -10,8 +10,8 @@ const stage = new Stage3D(600, 1000, 'canvas-2d');
 let playercursor = 90;
 let playervelocity = 3;
 
-const onConnect = (received) => {
-    console.log('gameStart!', received);
+const onConnect = () => {
+    console.log('gameStart!');
     const data = { test: 'yes' };
     socket.emit('game_start', data);
 };
