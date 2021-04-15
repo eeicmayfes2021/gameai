@@ -11,6 +11,8 @@ import os
 from cdefinitions import *
 from variables import *
 
+DEBUG = os.getenv('APP_DEBUG') == '1'
+
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
@@ -221,8 +223,9 @@ async def hit_stone(sid,data):
 def disconnect(sid):
     print('disconnect ', sid)
 
-app.router.add_static('/dist', 'dist')
-app.router.add_get('/', index)
+if DEBUG:
+    app.router.add_static('/dist', 'dist')
+    app.router.add_get('/', index)
 
 if __name__ == '__main__':
     #sio.start_background_task(background_task)
