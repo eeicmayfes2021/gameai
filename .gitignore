@@ -7,9 +7,9 @@ curlingenv/__pycache__
 /logs
 /__pycache__
 *.ipynb
-graphs/*
-dist/*
-models/*
+/graphs
+/dist
+/models
 cdefinitions.cpython-37m-darwin.so
 cdefinitions.c
 cdefinitions.cpython-38-darwin.so
