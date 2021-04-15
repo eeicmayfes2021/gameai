@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from cdefinitions import *
 from variables import *
 
-episode_num=100000
+episode_num=2000
 match_per_episode=100
 SAVE_NUM=10 #モデルを保存する
 EVAL_NUM=10 #モデルを評価する
@@ -110,7 +110,7 @@ for episode in range(episode_num):
     for match in range(match_per_episode):
         #一回プレイする
         stones=[]
-        side=1
+        side=-1
         while len(stones)<STONE_NUM*2:
             camp= "you" if side==1 else "AI"
             if random.random()<epsilon_func(episode):#Stoneをランダムに追加
@@ -140,7 +140,7 @@ for episode in range(episode_num):
         plays=10
         for play in range(plays):
             stones=[]
-            side=1
+            side=-1
             while len(stones)<STONE_NUM*2:
                 camp= "you" if side==1 else "AI"
                 if side==1:

@@ -3,7 +3,6 @@ cpdef int WIDTH=600
 cpdef int HEIGHT=1000
 cpdef int BALL_RADIUS=30
 cpdef float FRICTION=0.008
-cpdef int STONE_NUM=8
 
 cdef class Stone:
     cdef public str camp

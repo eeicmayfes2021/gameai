@@ -149,7 +149,23 @@ def connect(sid, environ):
 @sio.event
 async def game_start(sid, data): 
     print("message ", data['test'])
-    #ここで準備
+    #相手が打つ
+    #velocity,theta=choiceSecond(situations[sid])
+    velocity,theta= choiceSecond(situations[sid])
+    situations[sid].append(Stone("AI",velocity,theta))
+    
+    while True:
+        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        await sio.sleep(0.001)
+        stillmove = False
+        for stone in situations[sid]:
+            stone.move()
+            if stone.v[0]!=0 or stone.v[1]!=0:
+                stillmove=True
+        for pair in itertools.combinations(situations[sid], 2): #衝突判定
+            pair[0].collision(pair[1])
+        if not stillmove:
+            break
     #球を打っていいよの合図
     await sio.emit('your_turn',room=sid)
 
@@ -173,21 +189,22 @@ async def hit_stone(sid,data):
             break
     #相手が打つ
     #velocity,theta=choiceSecond(situations[sid])
-    velocity,theta=choiceSecond_absolute(situations[sid]) if len(situations[sid])==STONE_NUM*2-1 else choiceSecond(situations[sid])
-    situations[sid].append(Stone("AI",velocity,theta))
-    
-    while True:
-        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
-        await sio.sleep(0.001)
-        stillmove = False
-        for stone in situations[sid]:
-            stone.move()
-            if stone.v[0]!=0 or stone.v[1]!=0:
-                stillmove=True
-        for pair in itertools.combinations(situations[sid], 2): #衝突判定
-            pair[0].collision(pair[1])
-        if not stillmove:
-            break
+    if len(situations[sid])<STONE_NUM*2:
+        velocity,theta=choiceSecond(situations[sid])
+        situations[sid].append(Stone("AI",velocity,theta))
+        
+        while True:
+            await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+            await sio.sleep(0.001)
+            stillmove = False
+            for stone in situations[sid]:
+                stone.move()
+                if stone.v[0]!=0 or stone.v[1]!=0:
+                    stillmove=True
+            for pair in itertools.combinations(situations[sid], 2): #衝突判定
+                pair[0].collision(pair[1])
+            if not stillmove:
+                break
     if len(situations[sid])==STONE_NUM*2 :
         #ゲーム終わり
         player1_min_dist=1001001001
