@@ -1,9 +1,9 @@
 FROM node:14 AS node-build
 WORKDIR /src
-COPY js js
 COPY package.json ./
 RUN npm install
 COPY webpack.config.js ./
+COPY js js
 COPY static static
 RUN npm run build
 
