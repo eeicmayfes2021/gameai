@@ -26,17 +26,17 @@ cdef class Stone:
             return False
         self.x[0]+=self.v[0]
         self.x[1]+=self.v[1]
-        if self.x[0]>WIDTH: #x軸方向に反転
-            self.x[0]=2*WIDTH-self.x[0]
+        if self.x[0]>WIDTH-self.radius: #x軸方向に反転
+            self.x[0]=2*(WIDTH-self.radius)-self.x[0]
             self.v[0]=-self.v[0]
-        elif self.x[0]<0: #x軸方向に反転
-            self.x[0]=-self.x[0]
+        elif self.x[0]<0+self.radius: #x軸方向に反転
+            self.x[0]=2*(0+self.radius)-self.x[0]
             self.v[0]=-self.v[0]
-        if self.x[1]>HEIGHT: #y軸方向に反転
-            self.x[1]=2*HEIGHT-self.x[1]
+        if self.x[1]>HEIGHT-self.radius: #y軸方向に反転
+            self.x[1]=2*(HEIGHT-self.radius)-self.x[1]
             self.v[1]=-self.v[1]
-        elif self.x[1]<0: #y軸方向に反転
-            self.x[1]=-self.x[1]
+        elif self.x[1]<0+self.radius: #y軸方向に反転
+            self.x[1]=2*(0+self.radius)-self.x[1]
             self.v[1]=-self.v[1]
         return True
     cpdef collision(self,other):
