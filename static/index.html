@@ -2,12 +2,13 @@
   <head>
     <title>EEIC GameAI</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   </head>
   <body style="width:100%;height:100%;margin:0;">
-    <canvas id="canvas-2d" width="600" height="1000" style="width:60%;height:100%;object-fit:contain;"></canvas>
+    <div id="canvas-container" style="text-align: center;">
+      <canvas id="canvas-2d" width="600" height="1000" style="max-width:100%;max-height:95vh;"></canvas>
+    </div>
     <img id="player-image" src="/dist/player.gif" style="display: none;">
-    <script src="/dist/main.js"></script>
     <div id="scoreboard" style="float:left;">←→キーで角度を決めて，<br>↑↓キーで強さを決めて，<br>スペースキーで打ち出す</div>
+    <script src="/dist/main.js"></script>
   </body>
 </html>

@@ -13,8 +13,8 @@
   "license": "MIT",
   "dependencies": {
     "express": "^4.17.1",
-    "socket.io": "^4.0.0",
-    "socket.io-client": "^4.0.1"
+    "socket.io-client": "^4.0.1",
+    "three": "^0.127.0"
   },
   "devDependencies": {
     "@babel/core": "^7.13.14",
