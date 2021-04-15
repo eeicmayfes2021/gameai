@@ -1,12 +1,21 @@
 version: '3'
 services:
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
     working_dir: '/usr/src/app'
     tty: true
     ports:
       - "8080:8080"
-    expose:
-      - 8080
-    command:
-      python server.py
+    volumes:
+      - ./models:/usr/src/app/models
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile.train
+    working_dir: '/usr/src/app'
+    tty: true
+    volumes:
+      - ./models:/usr/src/app/models
+      - ./graphs:/usr/src/app/graphs
