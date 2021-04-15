@@ -16,6 +16,17 @@ $ python setup.py build_ext --inplace
 $ python server.py
 ```
 
+## dockerでの動かし方
+
+```bash
+$ npm install # jsインストール
+$ npm run build # jsビルド（js / html などを更新したら行う）
+$ docker-compose build # cythonビルド（src以下を更新したら行う）
+$ docker-compose up web # ゲームを起動
+$ docker-compose up train # 学習
+$ docker-compose up -d # バックグラウンドで両方起動
+```
+
 ## ゲームバランスの調整の仕方
 球の個数や摩擦力や速度・角度の制限などを変えるときは，サーバ側では`cdefinitions.pyx`と`variables.py`，クライアント側では`index.js`を変更する必要があります（cpdefの変数がpython側から認識できないため…）
 ## 機械学習によるモデルの生成

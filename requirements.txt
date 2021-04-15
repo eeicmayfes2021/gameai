@@ -2,3 +2,5 @@ aiohttp
 python-socketio
 tensorflow
 cpython
+cython
+matplotlib

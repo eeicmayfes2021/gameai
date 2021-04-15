@@ -239,7 +239,6 @@ def disconnect(sid):
     print('disconnect ', sid)
 
 app.router.add_static('/dist', 'dist')
-app.router.add_static('/node_modules', 'node_modules')
 app.router.add_get('/', index)
 
 if __name__ == '__main__':
