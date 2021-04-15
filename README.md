@@ -19,7 +19,9 @@ $ python server.py
 ## dockerでの動かし方
 
 ```bash
-$ docker-compose build # ビルド（ソースを更新したら行う）
+$ npm install # jsインストール
+$ npm run build # jsビルド（js / html などを更新したら行う）
+$ docker-compose build # cythonビルド（src以下を更新したら行う）
 $ docker-compose up web # ゲームを起動
 $ docker-compose up train # 学習
 $ docker-compose up -d # バックグラウンドで両方起動
