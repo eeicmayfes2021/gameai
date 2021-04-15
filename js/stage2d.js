@@ -14,6 +14,7 @@ export class Stage2D {
      */
     constructor(canvasId, onFlick) {
         /** @type {HTMLCanvasElement} */
+        //@ts-ignore
         this.canvas = document.getElementById(canvasId);
         
         this.context = this.canvas.getContext('2d');
