@@ -6,7 +6,7 @@ const playerImage = $('#player-image')[0];
 let playercursor=90;
 let playervelocity=3;
 let data_storage=null;
-const FRICTION=0.01
+const FRICTION=0.008
 //球を打つ
 function fillarc(x,y,size,color){
     context.fillStyle =color;

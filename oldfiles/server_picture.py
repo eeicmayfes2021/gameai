@@ -6,112 +6,71 @@ import numpy as np
 import random
 import tensorflow as tf
 import copy
-import os
 
-from cdefinitions import *
-from variables import *
-
+from ddqn_curling_discrete import CNNQNetwork
+from definitions import *
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
-# model_load= tf.keras.models.load_model('models/eval_obs_002160')
+model_load= tf.keras.models.load_model('models/eval_obs_picture_000150')
 
-epoches = 0
-base_path = "./models/eval_obs_"
-model_path = ""
-print("search models")
-while os.path.exists(base_path + str(epoches).zfill(6)):
-    model_path = base_path + str(epoches).zfill(6)
-    epoches += 10
-print("model path: ", model_path)
-# よくないが仮置きしている…
-model_load = tf.keras.models.Sequential([
-  #tf.keras.layers.Flatten(),
-  tf.keras.layers.InputLayer(input_shape=(STONE_NUM*4,)),
-  tf.keras.layers.Dense(STONE_NUM*4, activation=tf.nn.relu),
-  tf.keras.layers.Dropout(0.2),
-  tf.keras.layers.Dense(STONE_NUM*2+1, activation=tf.nn.softmax)
-])
-model_load.compile(optimizer='adam',
-              loss='sparse_categorical_crossentropy',
-              metrics=['accuracy'])
-# tf.keras.models.load_model('models/eval_obs_000010')
-
-if model_path:
-    print("find model")
-    flag = False  
-    model_load = tf.keras.models.load_model(model_path)
 
 #stonesToObsとmovestonesはモデルと同じにする
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
-    obs=np.array([-1 for i in range(STONE_NUM*4)],dtype=np.float32)
+    obs=np.array([0 for i in range(2*(HEIGHT//20)*(WIDTH//20))],dtype=np.uint8)
     i_you=0
     i_AI=STONE_NUM
     for stone in stones:
-        if stone.camp=='you' and i_you<STONE_NUM:#check!正規化するかどうか？
-            obs[i_you*2]=stone.x[0]/WIDTH
-            obs[i_you*2+1]=stone.x[1]/HEIGHT
-            i_you+=1
-        if stone.camp=='AI' and i_AI<STONE_NUM*2:
-            obs[i_AI*2]=stone.x[0]/WIDTH
-            obs[i_AI*2+1]=stone.x[1]/HEIGHT
-            i_AI+=1
+        w=min((WIDTH//20)-1,stone.x[0]//20)
+        h=min((HEIGHT//20)-1,stone.x[1]//20)
+        if stone.camp=='you':
+            obs[int(h*(WIDTH//20)+w)]=1
+        else:
+            obs[int((HEIGHT//20)*(WIDTH//20)+h*(WIDTH//20)+w)]=1
     return obs
-    
-
-def test_multi(m):
-    stones,velocity,theta=m
-    temp_stones=copy.deepcopy(stones)
-    temp_stones.append(Stone("AI",velocity,theta))
-    movestones(temp_stones)
-    obs=stonesToObs(temp_stones)
-    return obs
-
 def choiceSecond(stones):#後攻を選ぶ
     max_velocity=-1
     max_theta=-1
     max_score=-1001001001
     obs_list=[]
-    vtheta_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            vtheta_list.append((velocity,theta))
-            obs_list.append( test_multi((stones,velocity,theta)) )
+            temp_stones=copy.deepcopy(stones)
+            temp_stones.append(Stone("AI",velocity,theta))
+            movestones(temp_stones)
+            obs=stonesToObs(temp_stones)
+            obs_list.append(obs)
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     next_score_probs=model_load.predict(np.asarray(obs_list))
     itr=0
-    for velocity,theta in vtheta_list:
-        next_score=0.0
-        for i in range(STONE_NUM*2+1):
-            next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
-        #print(next_score)
-        if next_score>max_score:
-            max_score=next_score
-            max_theta=theta
-            max_velocity=velocity
-        itr+=1
+    for velocity in velocity_choices:
+        for theta in theta_choices:
+            next_score=0.0
+            for i in range(STONE_NUM*2+1):
+                next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
+            #print(next_score)
+            if next_score>max_score:
+                max_score=next_score
+                max_theta=theta
+                max_velocity=velocity
+            itr+=1
     return max_velocity,max_theta
 
-def test_multi2(m):
-    stones,velocity,theta=m
-    temp_stones=copy.deepcopy(stones)
-    temp_stones.append(Stone("AI",velocity,theta))
-    movestones(temp_stones)
-    score=-calculatePoint(temp_stones)
-    return score,velocity,theta
 def choiceSecond_absolute(stones):
     max_velocity=-1
     max_theta=-1
     max_score=-1001001001
-    score_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            score_list.append( test_multi2((stones,velocity,theta)) )
-    for score,velocity,theta in score_list:
-        if score>max_score:
-            max_theta=theta
-            max_velocity=velocity
-            max_score=score
+            temp_stones=copy.deepcopy(stones)
+            temp_stones.append(Stone("AI",velocity,theta))
+            movestones(temp_stones)
+            score=-calculatePoint(temp_stones)
+            if score>max_score:
+                max_score=score
+                max_velocity=velocity
+                max_theta=theta
+    print(max_velocity,max_theta)
     return max_velocity,max_theta
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
@@ -133,18 +92,6 @@ async def index(request):
 def connect(sid, environ):
     print("connect ", sid)
     situations[sid]=[]
-    
-    print("search models")
-    epo = 10
-    new_model_path = ""
-    while os.path.exists(base_path + str(epo).zfill(6)):
-        new_model_path = base_path + str(epo).zfill(6)
-        epo += 10
-    print("model path: ", new_model_path)
-
-    if new_model_path and new_model_path != model_path:
-        print("change model")
-        model_load = tf.keras.models.load_model(new_model_path)
 
 @sio.event
 async def game_start(sid, data): 
@@ -228,4 +175,3 @@ app.router.add_get('/', index)
 if __name__ == '__main__':
     #sio.start_background_task(background_task)
     web.run_app(app)
-

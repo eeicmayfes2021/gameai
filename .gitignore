@@ -5,8 +5,12 @@ static/helvetiker_bold.typeface.json
 curlingenv/__pycache__
 .ipynb_checkpoints
 /logs
-*.pt
 /__pycache__
 *.ipynb
 graphs/*
 dist/*
+models/*
+cdefinitions.cpython-37m-darwin.so
+cdefinitions.c
+cdefinitions.cpython-38-darwin.so
+/build

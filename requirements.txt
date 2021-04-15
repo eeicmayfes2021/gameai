@@ -1,0 +1,4 @@
+aiohttp
+python-socketio
+tensorflow
+cpython
