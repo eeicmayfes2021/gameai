@@ -1,89 +1,77 @@
 from aiohttp import web
 import socketio
 import math
-import threading
 import itertools
 import numpy as np
 import random
-import torch
-from torch import nn, optim
+import tensorflow as tf
+import copy
 
 from ddqn_curling_discrete import CNNQNetwork
-
-sio = socketio.AsyncServer(async_mode='aiohttp')#,logger=True, engineio_logger=True
+from definitions import *
+sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-net_load =  torch.load("models/model_016000.pt") #34000あたりが一番強そう…（謎）
+model_load= tf.keras.models.load_model('models/eval_obs_picture_000150')
 
-WIDTH=600
-HEIGHT=1000
-BALL_RADIUS=30
-FRICTION=0.01
-STONE_NUM=5
-class Stone:
-    def __init__(self,camp,v,theta):
-        self.camp=camp
-        self.y=0
-        self.x=WIDTH/2
-        if self.camp=="AI":
-            self.y=HEIGHT
-        self.v=np.array([v*math.cos(math.radians(theta)),v*math.sin(math.radians(theta))])
-        self.radius=BALL_RADIUS
-    def move(self):
-        vnorm=np.linalg.norm(self.v, ord=2)
-        if vnorm>FRICTION:
-            self.v=self.v*(vnorm-FRICTION)/vnorm #0.05減速
-        else:
-            self.v=np.array([0,0])#停止
-        self.x+=self.v[0]
-        self.y+=self.v[1]
-        if self.x>WIDTH: #x軸方向に反転
-            self.x=2*WIDTH-self.x
-            self.v[0]=-self.v[0]
-        if self.x<0: #x軸方向に反転
-            self.x=-self.x
-            self.v[0]=-self.v[0]
-        if self.y>HEIGHT: #y軸方向に反転
-            self.y=2*HEIGHT-self.y
-            self.v[1]=-self.v[1]
-        if self.y<0: #y軸方向に反転
-            self.y=-self.y
-            self.v[1]=-self.v[1]
-    def collision(self,other):
-        dist=math.sqrt( (self.x-other.x)**2+(self.y-other.y)**2 )
-        if dist>self.radius+other.radius:
-            return
-        #衝突している時
-        #運動方程式解いた
-        e=np.divide(np.array([self.x-other.x,self.y-other.y]), dist, where=dist!=0)
-        t=np.dot(self.v,e)-np.dot(other.v,e)
-        self.v=self.v-t*e
-        other.v=self.v+t*e
-    def return_dist(self):
-        dist=math.sqrt( (self.x-WIDTH/2)**2+(self.y-HEIGHT/2)**2 )
-        return dist
-    def encode(self):
-        return {'x': self.x,
-            'y': self.y,
-            'radius':self.radius,
-            'camp':self.camp}
 
+#stonesToObsとmovestonesはモデルと同じにする
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
-    obs=np.array([-1 for i in range(STONE_NUM*4)])
+    obs=np.array([0 for i in range(2*(HEIGHT//20)*(WIDTH//20))],dtype=np.uint8)
     i_you=0
     i_AI=STONE_NUM
     for stone in stones:
-        if stone.camp=='you' and i_you<STONE_NUM:
-            obs[i_you*2]=stone.x
-            obs[i_you*2+1]=stone.y
-            i_you+=1
-        if stone.camp=='AI' and i_AI<STONE_NUM*2:
-            obs[i_AI*2]=stone.x
-            obs[i_AI*2+1]=stone.y
-            i_AI+=1
+        w=min((WIDTH//20)-1,stone.x[0]//20)
+        h=min((HEIGHT//20)-1,stone.x[1]//20)
+        if stone.camp=='you':
+            obs[int(h*(WIDTH//20)+w)]=1
+        else:
+            obs[int((HEIGHT//20)*(WIDTH//20)+h*(WIDTH//20)+w)]=1
     return obs
+def choiceSecond(stones):#後攻を選ぶ
+    max_velocity=-1
+    max_theta=-1
+    max_score=-1001001001
+    obs_list=[]
+    for velocity in velocity_choices:
+        for theta in theta_choices:
+            temp_stones=copy.deepcopy(stones)
+            temp_stones.append(Stone("AI",velocity,theta))
+            movestones(temp_stones)
+            obs=stonesToObs(temp_stones)
+            obs_list.append(obs)
+    #https://note.nkmk.me/python-tensorflow-keras-basics/
+    next_score_probs=model_load.predict(np.asarray(obs_list))
+    itr=0
+    for velocity in velocity_choices:
+        for theta in theta_choices:
+            next_score=0.0
+            for i in range(STONE_NUM*2+1):
+                next_score+=next_score_probs[itr][i]*(i-STONE_NUM)
+            #print(next_score)
+            if next_score>max_score:
+                max_score=next_score
+                max_theta=theta
+                max_velocity=velocity
+            itr+=1
+    return max_velocity,max_theta
 
+def choiceSecond_absolute(stones):
+    max_velocity=-1
+    max_theta=-1
+    max_score=-1001001001
+    for velocity in velocity_choices:
+        for theta in theta_choices:
+            temp_stones=copy.deepcopy(stones)
+            temp_stones.append(Stone("AI",velocity,theta))
+            movestones(temp_stones)
+            score=-calculatePoint(temp_stones)
+            if score>max_score:
+                max_score=score
+                max_velocity=velocity
+                max_theta=theta
+    print(max_velocity,max_theta)
+    return max_velocity,max_theta
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
 
@@ -131,9 +119,9 @@ async def hit_stone(sid,data):
         if not stillmove:
             break
     #相手が打つ
-    obs=stonesToObs(situations[sid])
-    action = net_load.act(torch.from_numpy(obs.astype(np.float32)).clone().float().to(device),0)
-    situations[sid].append( Stone("AI",action[0],action[1]) )
+    #velocity,theta=choiceSecond(situations[sid])
+    velocity,theta=choiceSecond_absolute(situations[sid]) if len(situations[sid])==STONE_NUM*2-1 else choiceSecond(situations[sid])
+    situations[sid].append(Stone("AI",velocity,theta))
     
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)

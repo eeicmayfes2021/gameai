@@ -1,5 +1,4 @@
 import { io } from 'socket.io-client';
-
 import { Stage2D } from './stage2d';
 import { Stage3D } from './stage3d';
 import { clamp } from './util';

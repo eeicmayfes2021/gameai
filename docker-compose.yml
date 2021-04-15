@@ -1,0 +1,24 @@
+version: '3'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: '/usr/src/app'
+    command: python src/server.py
+    tty: true
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./models:/usr/src/app/models
+      - ./dist:/usr/src/app/dist
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: '/usr/src/app'
+    command: python src/eval_obs.py
+    tty: true
+    volumes:
+      - ./models:/usr/src/app/models
+      - ./graphs:/usr/src/app/graphs
