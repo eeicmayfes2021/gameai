@@ -1,8 +1,10 @@
 version: '3'
 services:
-  web:
+  app:
     image: gameai-web
-    ports:
-      - "8080:8080"
     volumes:
       - ../models:/usr/src/app/models
+  nginx:
+    image: gameai-nginx
+    ports:
+      - "80:80"

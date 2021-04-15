@@ -2,4 +2,4 @@
 set -eu
 cd `dirname $0`
 docker build -f Dockerfile.web -t gameai-web ..
-docker build -f Dockerfile.train -t gameai-train ..
+docker build -f Dockerfile.nginx -t gameai-nginx ..
