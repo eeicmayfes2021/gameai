@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
-const FRICTION = 0.01;
+const FRICTION = 0.008;
 
 /**
  * 注意 : Stage2D とは座標系が異なるため、x の値を反転させている。

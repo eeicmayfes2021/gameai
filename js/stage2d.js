@@ -1,4 +1,4 @@
-const FRICTION = 0.01;
+const FRICTION = 0.008;
 
 /** タッチ開始点との最大距離 */
 const EPSILON = 40;
