@@ -17,7 +17,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src src
 RUN cd src && python setup.py build_ext --inplace
 
-COPY --from=node-build /src/node_modules node_modules
 COPY --from=node-build /src/dist dist
 
 CMD python src/server.py
