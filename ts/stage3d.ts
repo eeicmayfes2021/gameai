@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { Stone } from './models/common';
 
 const FRICTION = 0.008;
 
@@ -7,28 +8,25 @@ const FRICTION = 0.008;
  * 注意 : Stage2D とは座標系が異なるため、x の値を反転させている。
  */
 export class Stage3D {
-    canvas: HTMLCanvasElement;
-    scene: THREE.Scene;
-    renderer: THREE.WebGLRenderer;
-    camera: THREE.PerspectiveCamera;
-    controls: OrbitControls;
-    stageSize: THREE.Vector2;
-    stones: THREE.Object3D[];
-    line: THREE.Line;
+    private canvas: HTMLCanvasElement;
+    private scene: THREE.Scene;
+    private renderer: THREE.WebGLRenderer;
+    private camera: THREE.PerspectiveCamera;
+    private controls: OrbitControls;
+    private stageSize: THREE.Vector2;
+    private stones: THREE.Object3D[];
+    private line: THREE.Line;
 
     /**
      * Initialize Stage2D.
-     * @param {number} stageWidth
-     * @param {number} stageHeight
-     * @param {string} appendTo
      */
-    constructor(stageWidth, stageHeight, appendTo) {
+    constructor(stageWidth: number, stageHeight: number, appendTo: string) {
         this.scene = new THREE.Scene();
         this.stageSize = new THREE.Vector2(stageWidth, stageHeight);
         
-        this._constructStage();
+        this.constructStage();
         
-        this._setupPointer();
+        this.line = this.setupPointer();
         
         this.canvas = document.getElementById(appendTo) as HTMLCanvasElement;
         
@@ -43,10 +41,10 @@ export class Stage3D {
 
         this.stones = [];
         
-        this._render();
+        this.render();
     }
     
-    _constructStage() {
+    private constructStage() {
         const loader = new THREE.TextureLoader();
 
         const base = new THREE.Mesh(
@@ -67,7 +65,7 @@ export class Stage3D {
         this.scene.add(ambient);
     }
     
-    _setupPointer() {
+    private setupPointer(): THREE.Line {
         const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
         //TODO: remove magic number (15)
         const points = [
@@ -75,17 +73,19 @@ export class Stage3D {
             new THREE.Vector3(-1, 0, 0)
         ];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        this.line = new THREE.Line(geometry, material);    
-        this.line.position.x = -this.stageSize.x / 2;
-        this.line.position.y = 15;
+        const line = new THREE.Line(geometry, material);    
+        line.position.x = -this.stageSize.x / 2;
+        line.position.y = 15;
         
-        this.scene.add(this.line);
+        this.scene.add(line);
+        
+        return line;
     }
     
-    _render() {
-        requestAnimationFrame(() => { this._render(); });
+    private render() {
+        requestAnimationFrame(() => { this.render(); });
         
-        if (this._resizeRendererToDisplaySize()) {
+        if (this.resizeRendererToDisplaySize()) {
             this.camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
             this.camera.updateProjectionMatrix();
         }
@@ -96,16 +96,13 @@ export class Stage3D {
 
     /**
      * Update Stones' positions.
-     * @param {any} data 
      */
-    updateStones(data) {
-        if(data === null) return;
-
-        data.stones.forEach((stone, i) => {
+    updateStones(stones: Stone[]) {
+        stones.forEach((stone, i) => {
             if(i < this.stones.length) {
                 this.stones[i].position.set(-stone.x, 20, stone.y);
             }else {
-                this._instantiateStone(
+                this.instantiateStone(
                     stone.radius, stone.camp, -stone.x, stone.y
                 );
                 
@@ -114,14 +111,7 @@ export class Stage3D {
         });
     }
     
-    /**
-     * Instantiate a stone at a given position.
-     * @param {number} radius stone radius
-     * @param {string} camp stone owner
-     * @param {number} x stone position x
-     * @param {number} y stone position y
-     */
-    _instantiateStone(radius, camp, x, y) {
+    private instantiateStone(radius: number, camp: string, x: number, y: number) {
         //TODO: remove magic number (20)
         const newStone = new THREE.Mesh(
             new THREE.CylinderGeometry(radius, radius, 20),
@@ -135,10 +125,8 @@ export class Stage3D {
 
     /**
      * Update pointer direction and length.
-     * @param {number} theta 
-     * @param {number} velocity 
      */
-    updatePointer(theta, velocity) {
+    updatePointer(theta: number, velocity: number) {
         this.line.quaternion.setFromAxisAngle(
             new THREE.Vector3(0, 1, 0),
             theta * THREE.MathUtils.DEG2RAD
@@ -149,7 +137,7 @@ export class Stage3D {
     }
     
     // 参考 : https://threejsfundamentals.org/threejs/lessons/ja/threejs-responsive.html
-    _resizeRendererToDisplaySize() {
+    private resizeRendererToDisplaySize() {
         const needResize = this.canvas.width !== this.canvas.clientWidth
                         || this.canvas.height !== this.canvas.clientHeight;
         if (needResize) {

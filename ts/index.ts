@@ -2,6 +2,7 @@ import { io } from 'socket.io-client';
 //import { Stage2D } from './stage2d';
 import { Stage3D } from './stage3d';
 import { clamp } from './util';
+import { MoveStonesMessage, WinMessage } from './models/socket';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -16,13 +17,12 @@ const onConnect = () => {
     socket.emit('game_start', data);
 };
 
-const onYourTurn = (data) => {
+const onYourTurn = () => {
     playercursor = 90;
     playervelocity = 3;
     stage.updatePointer(playercursor, playervelocity);
     
-    /** @param {KeyboardEvent} event */
-    const onKeyDown = (event) => {
+    const onKeyDown = (event: KeyboardEvent) => {
         switch(event.key) {
             case 'ArrowLeft':
                 playercursor += 1.0;
@@ -56,28 +56,23 @@ const onYourTurn = (data) => {
     document.addEventListener('keydown', onKeyDown);
 };
 
-const onMoveStones = (data) => {
-    stage.updateStones(data);
+const onMoveStones = (data?: MoveStonesMessage) => {
+    stage.updateStones(data?.stones ?? []);
 };
 
-const onYouWin = (data) => {
+const onYouWin = (data: WinMessage) => {
     console.log('you win! score:', data.score);
-    const scoreboard = document.getElementById('scoreboard');
+    const scoreboard = document.getElementById('scoreboard')!;
     scoreboard.innerHTML = `${data.score}点であなたの勝利です．`;
 };
 
-const onAIWin = (data) => {
+const onAIWin = (data: WinMessage) => {
     console.log('AI win! score:', data.score);
-    const scoreboard = document.getElementById('scoreboard');
+    const scoreboard = document.getElementById('scoreboard')!;
     scoreboard.innerHTML = `${data.score}点であなたの負けです．`;
 };
 
-/**
- * Handle Flick event.
- * @param {number} theta 
- * @param {number} velocity 
- */
-const onFlick = (theta, velocity) => {
+const onFlick = (theta: number, velocity: number) => {
     socket.emit('hit_stone', { theta, velocity });
 };
 
