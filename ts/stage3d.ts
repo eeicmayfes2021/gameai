@@ -7,6 +7,15 @@ const FRICTION = 0.008;
  * 注意 : Stage2D とは座標系が異なるため、x の値を反転させている。
  */
 export class Stage3D {
+    canvas: HTMLCanvasElement;
+    scene: THREE.Scene;
+    renderer: THREE.WebGLRenderer;
+    camera: THREE.PerspectiveCamera;
+    controls: OrbitControls;
+    stageSize: THREE.Vector2;
+    stones: THREE.Object3D[];
+    line: THREE.Line;
+
     /**
      * Initialize Stage2D.
      * @param {number} stageWidth
@@ -21,9 +30,7 @@ export class Stage3D {
         
         this._setupPointer();
         
-        /** @type {HTMLCanvasElement} */
-        // @ts-ignore
-        this.canvas = document.getElementById(appendTo);
+        this.canvas = document.getElementById(appendTo) as HTMLCanvasElement;
         
         this.camera = new THREE.PerspectiveCamera(75, this.canvas.clientWidth / this.canvas.clientHeight, 10, 10000);
         this.camera.position.set(-this.stageSize.x / 2, 400, -250);

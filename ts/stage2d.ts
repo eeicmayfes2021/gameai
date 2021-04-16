@@ -7,15 +7,21 @@ const EPSILON = 40;
 const FLICK_RATIO = 2;
 
 export class Stage2D {
+    canvas: HTMLCanvasElement;
+    context: CanvasRenderingContext2D;
+    pointerX: number;
+    pointerY: number;
+    stones: any[];
+    touching: boolean;
+    onFlick: (theta: number, velocity: number) => void
+
     /**
      * Initialize Stage2D.
      * @param {string} canvasId 
      * @param {(theta: number, velocity: number) => void} [onFlick]
      */
     constructor(canvasId, onFlick) {
-        /** @type {HTMLCanvasElement} */
-        //@ts-ignore
-        this.canvas = document.getElementById(canvasId);
+        this.canvas = document.getElementById(canvasId) as HTMLCanvasElement;
         
         this.context = this.canvas.getContext('2d');
         
