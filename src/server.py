@@ -27,8 +27,14 @@ print("model path: ", model_path)
 # よくないが仮置きしている…
 model_load = tf.keras.models.Sequential([
   #tf.keras.layers.Flatten(),
-  tf.keras.layers.InputLayer(input_shape=(STONE_NUM*4,)),
-  tf.keras.layers.Dense(STONE_NUM*4, activation=tf.nn.relu),
+  tf.keras.layers.InputLayer(input_shape=(HEIGHT//20,WIDTH//20,2)),
+  tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(HEIGHT//20,WIDTH//20,2)),
+  tf.keras.layers.MaxPooling2D((2, 2)),
+  tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+  tf.keras.layers.MaxPooling2D((2, 2)),
+  tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+  tf.keras.layers.Flatten(),
+  tf.keras.layers.Dense(64, activation=tf.nn.relu),
   tf.keras.layers.Dropout(0.2),
   tf.keras.layers.Dense(STONE_NUM*2+1, activation=tf.nn.softmax)
 ])
@@ -44,20 +50,17 @@ if model_path:
 
 #stonesToObsとmovestonesはモデルと同じにする
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
-    obs=np.array([-1 for i in range(STONE_NUM*4)],dtype=np.float32)
+    obs=np.array([[[0 for k in range(2)] for j in range(WIDTH//20)] for i in range(HEIGHT//20)],dtype=np.uint8)
     i_you=0
     i_AI=STONE_NUM
     for stone in stones:
-        if stone.camp=='you' and i_you<STONE_NUM:#check!正規化するかどうか？
-            obs[i_you*2]=stone.x[0]/WIDTH
-            obs[i_you*2+1]=stone.x[1]/HEIGHT
-            i_you+=1
-        if stone.camp=='AI' and i_AI<STONE_NUM*2:
-            obs[i_AI*2]=stone.x[0]/WIDTH
-            obs[i_AI*2+1]=stone.x[1]/HEIGHT
-            i_AI+=1
+        w=int( min((WIDTH//20)-1,stone.x[0]//20) )
+        h=int( min((HEIGHT//20)-1,stone.x[1]//20) )
+        if stone.camp=='you':
+            obs[h][w][0]=1
+        else:
+            obs[h][w][1]=1
     return obs
-    
 
 def test_multi(m):
     stones,velocity,theta=m
@@ -135,7 +138,7 @@ def connect(sid, environ):
     situations[sid]=[]
     
     print("search models")
-    epo = 10
+    epo = 0
     new_model_path = ""
     while os.path.exists(base_path + str(epo).zfill(6)):
         new_model_path = base_path + str(epo).zfill(6)

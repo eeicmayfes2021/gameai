@@ -23,8 +23,14 @@ epsilon_func = lambda step: max(epsilon_end, epsilon_begin - (epsilon_begin - ep
 
 model = tf.keras.models.Sequential([
   #tf.keras.layers.Flatten(),
-  tf.keras.layers.InputLayer(input_shape=(2*(HEIGHT//20)*(WIDTH//20),)),
-  tf.keras.layers.Dense((HEIGHT//20)*(HEIGHT//20), activation=tf.nn.relu),
+  tf.keras.layers.InputLayer(input_shape=(HEIGHT//20,WIDTH//20,2)),
+  tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(HEIGHT//20,WIDTH//20,2)),
+  tf.keras.layers.MaxPooling2D((2, 2)),
+  tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+  tf.keras.layers.MaxPooling2D((2, 2)),
+  tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+  tf.keras.layers.Flatten(),
+  tf.keras.layers.Dense(64, activation=tf.nn.relu),
   tf.keras.layers.Dropout(0.2),
   tf.keras.layers.Dense(STONE_NUM*2+1, activation=tf.nn.softmax)
 ])
@@ -33,16 +39,16 @@ model.compile(optimizer='adam',
               metrics=['accuracy'])
 
 def stonesToObs(stones): #Stoneの塊をobs(numpy.ndarray)に変換する
-    obs=np.array([0 for i in range(2*(HEIGHT//20)*(WIDTH//20))],dtype=np.uint8)
+    obs=np.array([[[0 for k in range(2)] for j in range(WIDTH//20)] for i in range(HEIGHT//20)],dtype=np.uint8)
     i_you=0
     i_AI=STONE_NUM
     for stone in stones:
-        w=min((WIDTH//20)-1,stone.x[0]//20)
-        h=min((HEIGHT//20)-1,stone.x[1]//20)
+        w=int( min((WIDTH//20)-1,stone.x[0]//20) )
+        h=int( min((HEIGHT//20)-1,stone.x[1]//20) )
         if stone.camp=='you':
-            obs[int(h*(WIDTH//20)+w)]=1
+            obs[h][w][0]=1
         else:
-            obs[int((HEIGHT//20)*(WIDTH//20)+h*(WIDTH//20)+w)]=1
+            obs[h][w][1]=1
     return obs
 
 def choiceSecond(stones):#後攻を選ぶ
@@ -111,7 +117,7 @@ for episode in range(episode_num):
     for match in range(match_per_episode):
         #一回プレイする
         stones=[]
-        side=1
+        side=-1
         while len(stones)<STONE_NUM*2:
             camp= "you" if side==1 else "AI"
             if random.random()<epsilon_func(episode):#Stoneをランダムに追加
@@ -141,7 +147,7 @@ for episode in range(episode_num):
         plays=10
         for play in range(plays):
             stones=[]
-            side=1
+            side=-1
             while len(stones)<STONE_NUM*2:
                 camp= "you" if side==1 else "AI"
                 if side==1:
@@ -160,8 +166,8 @@ for episode in range(episode_num):
         scores_list.append(total_score/plays)
         x=[i*EVAL_NUM for i in range(len(scores_list))]
         plt.plot(x,scores_list,'b+')
-        plt.savefig("graphs/eval_obs_picture.png")
+        plt.savefig("graphs/eval_obs.png")
     #SAVE_NUMエピソードごとにモデルを保存 https://www.tensorflow.org/guide/saved_model
     if episode%SAVE_NUM==0:
-        tf.saved_model.save(model, 'models/eval_obs_picture_{:0=6}/'.format(episode))
-        print("saved ",'models/eval_obs_picture_{:0=6}/'.format(episode))
+        tf.saved_model.save(model, 'models/eval_obs_{:0=6}/'.format(episode))
+        print("saved ",'models/eval_obs_{:0=6}/'.format(episode))
