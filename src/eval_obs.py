@@ -81,7 +81,7 @@ def choiceFirst(stones):#先攻を選ぶ
     for velocity in velocity_choices:
         for theta in theta_choices:
             temp_stones=copy.deepcopy(stones)
-            temp_stones.append(Stone("AI",velocity,theta))
+            temp_stones.append(Stone("you",velocity,theta))
             movestones(temp_stones)
             obs=stonesToObs(temp_stones)
             obs_list.append(obs)
