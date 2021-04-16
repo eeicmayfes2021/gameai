@@ -102,22 +102,20 @@ export class Stage3D {
             if(i < this.stones.length) {
                 this.stones[i].position.set(-stone.x, 20, stone.y);
             }else {
-                this.instantiateStone(
-                    stone.radius, stone.camp, -stone.x, stone.y
-                );
+                this.instantiateStone(stone);
                 
                 console.log('stone added!');
             }
         });
     }
     
-    private instantiateStone(radius: number, camp: string, x: number, y: number) {
+    private instantiateStone(stone: Stone) {
         //TODO: remove magic number (20)
         const newStone = new THREE.Mesh(
-            new THREE.CylinderGeometry(radius, radius, 20),
-            new THREE.MeshStandardMaterial({ color: camp === 'you' ? 'red': 'blue' })
+            new THREE.CylinderGeometry(stone.radius, stone.radius, 20),
+            new THREE.MeshStandardMaterial({ color: stone.camp === 'you' ? 'red': 'blue' })
         );
-        newStone.position.set(x, 20, y);
+        newStone.position.set(-stone.x, 20, stone.y);
 
         this.scene.add(newStone);
         this.stones.push(newStone);
