@@ -118,14 +118,6 @@ def choiceSecond_absolute(stones):
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
 
-async def background_task():
-    """Example of how to send server generated events to clients."""
-    count = 0
-    while True:
-        await sio.sleep(10)
-        count += 1
-        await sio.emit('my_response', {'data': 'Server generated event'})
-
 async def index(request):
     """Serve the client-side application."""
     with open('dist/index.html') as f:
@@ -228,6 +220,5 @@ if DEBUG:
     app.router.add_get('/', index)
 
 if __name__ == '__main__':
-    #sio.start_background_task(background_task)
     web.run_app(app)
 
