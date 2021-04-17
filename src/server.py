@@ -18,14 +18,22 @@ app = web.Application()
 sio.attach(app)
 # model_load= tf.keras.models.load_model('models/eval_obs_002160')
 
-epoches = 0
-base_path = "./models/eval_obs_"
-model_path = ""
+# モデルの一覧を返します。
+def get_model_list():
+    epoches = 0
+    base_path = "./models/eval_obs_"
+    models = []
+    while os.path.exists(base_path + str(epoches).zfill(6)):
+        model_path = base_path + str(epoches).zfill(6)
+        models.append(model_path)
+        epoches += 10
+    return models
+
 print("search models")
-while os.path.exists(base_path + str(epoches).zfill(6)):
-    model_path = base_path + str(epoches).zfill(6)
-    epoches += 10
+models = get_model_list()
+model_path = models[-1]
 print("model path: ", model_path)
+
 # よくないが仮置きしている…
 model_load = tf.keras.models.Sequential([
   #tf.keras.layers.Flatten(),
@@ -123,17 +131,18 @@ async def index(request):
     with open('dist/index.html') as f:
         return web.Response(text=f.read(), content_type='text/html')
 
+async def model_list(request):
+    return web.json_response(models)
+
 @sio.event
 def connect(sid, environ):
     print("connect ", sid)
     situations[sid]=[]
     
     print("search models")
-    epo = 10
-    new_model_path = ""
-    while os.path.exists(base_path + str(epo).zfill(6)):
-        new_model_path = base_path + str(epo).zfill(6)
-        epo += 10
+
+    models = get_model_list()
+    new_model_path = models[-1]
     print("model path: ", new_model_path)
 
     if new_model_path and new_model_path != model_path:
@@ -218,6 +227,7 @@ def disconnect(sid):
 if DEBUG:
     app.router.add_static('/dist', 'dist')
     app.router.add_get('/', index)
+    app.router.add_get('/api/models', model_list)
 
 if __name__ == '__main__':
     web.run_app(app)
