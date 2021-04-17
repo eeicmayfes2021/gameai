@@ -22,6 +22,8 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Build docekr containers
         run: ./build
+        env:
+          DOCKER_BUILDKIT: 1
         working-directory: ./deploy
       - name: Push docker containers to ECR
         run: ./push

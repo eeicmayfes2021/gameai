@@ -1,5 +1,5 @@
 #!/bin/bash
 set -eu
 cd `dirname $0`
-docker build -f Dockerfile.web -t gameai-app ..
-docker build -f Dockerfile.nginx -t gameai-nginx ..
+docker build --cache-from=554746007656.dkr.ecr.ap-northeast-1.amazonaws.com/gameai-app:latest -f Dockerfile.web -t gameai-app ..
+docker build --cache-from=554746007656.dkr.ecr.ap-northeast-1.amazonaws.com/gameai-nginx:latest -f Dockerfile.nginx -t gameai-nginx ..
