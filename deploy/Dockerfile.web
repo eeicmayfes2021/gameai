@@ -1,12 +1,3 @@
-FROM node:14 AS node-build
-WORKDIR /src
-COPY package.json ./
-RUN npm install
-COPY webpack.config.js tsconfig.json ./
-COPY ts ts
-COPY static static
-RUN npm run build
-
 FROM python:3.7
 WORKDIR /usr/src/app
 
@@ -19,7 +10,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src src
 RUN cd src && python setup.py build_ext --inplace
-
-COPY --from=node-build /src/dist dist
 
 CMD python src/server.py
