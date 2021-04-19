@@ -139,7 +139,7 @@ for episode in range(episode_num):
             scores.append(score+STONE_NUM)
     obs_list=np.asarray(obs_list,dtype=np.float32)
     scores=np.asarray(scores)
-    model.fit(obs_list,scores,epochs=10)
+    model.fit(obs_list,scores,epochs=3)
     #EVAL_NUMエピソードごとに10回プレイした平均点を記録してplot
     if episode%EVAL_NUM==0:
         print("evaluating...",episode)
