@@ -198,6 +198,7 @@ async def game_start(sid, data):
 async def hit_stone(sid,data):
     print("hit_stone")
     situations[sid].append( Stone("you",data["velocity"],data["theta"]) )
+    isFirst = True
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
         await sio.sleep(0.001)
@@ -206,8 +207,33 @@ async def hit_stone(sid,data):
             stone.move()
             if stone.v[0]!=0 or stone.v[1]!=0:
                 stillmove=True
+        
         for pair in itertools.combinations(situations[sid], 2): #衝突判定
-            pair[0].collision(pair[1])
+            # pair[0].collision(pair[1])
+            # continue
+            dist=math.sqrt( (pair[0].x[0]-pair[1].x[0])*(pair[0].x[0]-pair[1].x[0])+(pair[0].x[1]-pair[1].x[1])*(pair[0].x[1]-pair[1].x[1]))
+            if dist > pair[0].radius + pair[1].radius or dist==0:
+                continue
+            
+            #衝突している時
+            #運動方程式解いた
+            
+            e= [(pair[1].x[0]-pair[0].x[0])/dist,(pair[1].x[1]-pair[0].x[1])/dist]
+            # t=(pair[0].v[0]*e[0]+pair[0].v[1]*e[1])-(pair[1].v[0]*e[0]+pair[1].v[1]*e[1])
+            # pair[0].v=[pair[0].v[0]-t*e[0],pair[0].v[1]-t*e[1]]
+            # pair[1].v=[pair[1].v[0]+t*e[0],pair[1].v[1]+t*e[1]]
+            
+            # 座標を回転させた後の値
+            # aがpair[0], bがpair[1]に対応
+            vax =  e[0] * pair[0].v[0] + e[1] * pair[0].v[1]
+            vay = -e[1] * pair[0].v[0] + e[0] * pair[0].v[1]
+            vbx = e[0] * pair[1].v[0] + e[1] * pair[1].v[1]
+            vby = -e[1] * pair[1].v[0] + e[0] * pair[1].v[1]
+
+            pair[0].v[0]  = e[0] * vbx - e[1] * vay
+            pair[0].v[1]  = e[1] * vbx + e[0] * vay
+            pair[1].v[0] = e[0] * vax - e[1] * vby
+            pair[1].v[1] = e[1] * vax + e[0] * vby
         if not stillmove:
             break
     #相手が打つ
@@ -224,7 +250,31 @@ async def hit_stone(sid,data):
             if stone.v[0]!=0 or stone.v[1]!=0:
                 stillmove=True
         for pair in itertools.combinations(situations[sid], 2): #衝突判定
-            pair[0].collision(pair[1])
+            # pair[0].collision(pair[1])
+            # continue
+            dist=math.sqrt( (pair[0].x[0]-pair[1].x[0])*(pair[0].x[0]-pair[1].x[0])+(pair[0].x[1]-pair[1].x[1])*(pair[0].x[1]-pair[1].x[1]))
+            if dist > pair[0].radius + pair[1].radius or dist==0:
+                continue
+            
+            #衝突している時
+            #運動方程式解いた
+            
+            e= [(pair[1].x[0]-pair[0].x[0])/dist,(pair[1].x[1]-pair[0].x[1])/dist]
+            # t=(pair[0].v[0]*e[0]+pair[0].v[1]*e[1])-(pair[1].v[0]*e[0]+pair[1].v[1]*e[1])
+            # pair[0].v=[pair[0].v[0]-t*e[0],pair[0].v[1]-t*e[1]]
+            # pair[1].v=[pair[1].v[0]+t*e[0],pair[1].v[1]+t*e[1]]
+            
+            # 座標を回転させた後の値
+            # aがpair[0], bがpair[1]に対応
+            vax =  e[0] * pair[0].v[0] + e[1] * pair[0].v[1]
+            vay = -e[1] * pair[0].v[0] + e[0] * pair[0].v[1]
+            vbx = e[0] * pair[1].v[0] + e[1] * pair[1].v[1]
+            vby = -e[1] * pair[1].v[0] + e[0] * pair[1].v[1]
+
+            pair[0].v[0]  = e[0] * vbx - e[1] * vay
+            pair[0].v[1]  = e[1] * vbx + e[0] * vay
+            pair[1].v[0] = e[0] * vax - e[1] * vby
+            pair[1].v[1] = e[1] * vax + e[0] * vby
         if not stillmove:
             break
     if len(situations[sid])==STONE_NUM*2 :

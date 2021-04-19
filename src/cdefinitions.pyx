@@ -45,6 +45,7 @@ cdef class Stone:
             return
         #衝突している時
         #運動方程式解いた
+        #print("ぶつかった！！")
         e= [(other.x[0]-self.x[0])/dist,(other.x[1]-self.x[1])/dist]
         # t=(self.v[0]*e[0]+self.v[1]*e[1])-(other.v[0]*e[0]+other.v[1]*e[1])
         # self.v=[self.v[0]-t*e[0],self.v[1]-t*e[1]]
@@ -62,14 +63,9 @@ cdef class Stone:
         other.v[0] = e[0] * vax - e[1] * vby
         other.v[1] = e[1] * vax + e[0] * vby
         
+        
 
-        while dist>self.radius+other.radius or dist==0:
-            self.move()
-            other.move()
-            dist=sqrt( (self.x[0]-other.x[0])*(self.x[0]-other.x[0])+(self.x[1]-other.x[1])*(self.x[1]-other.x[1]))
-            if self.v[0] == 0 and self.v[1]== 0 and dist<self.radius+other.radius:
-                print("cannnot move but the distance is too near!!")
-                break
+        
         
     cpdef return_dist(self):
         center=[WIDTH/2,HEIGHT/2]
