@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 //import { Stage2D } from './stage2d';
 import { Stage3D } from './stage3d';
 import { clamp } from './util';
-import { MoveStonesMessage, WinMessage } from './models/socket';
+import { MoveStonesMessage, WinMessage, ModelMessage } from './models/socket';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -76,10 +76,15 @@ const onFlick = (theta: number, velocity: number) => {
     socket.emit('hit_stone', { theta, velocity });
 };
 
+const onModelLoad = (data:ModelMessage) => {
+    console.log('model:', data.model_path);
+};
+
 window.onload = () => {
     console.log('Page is loaded');
 
     socket.on('connect', onConnect);
+    socket.on('model_load', onModelLoad);
     socket.on('your_turn', onYourTurn);
     socket.on('move_stones', onMoveStones);
     socket.on('you_win', onYouWin);

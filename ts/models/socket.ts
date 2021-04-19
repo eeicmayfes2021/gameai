@@ -7,3 +7,7 @@ export interface MoveStonesMessage {
 export interface WinMessage {
     score: number;
 }
+
+export interface ModelMessage {
+    model_path: string;
+}

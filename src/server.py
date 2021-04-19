@@ -174,7 +174,7 @@ async def model_list(request):
     return web.json_response(models)
 
 @sio.event
-def connect(sid, environ):
+async def connect(sid, environ):
     print("connect ", sid)
     situations[sid]=[]
     
@@ -186,6 +186,7 @@ def connect(sid, environ):
     if new_model_path and new_model_path != model_path:
         print("change model")
         model_load = tf.keras.models.load_model(new_model_path)
+    await sio.emit('model_load', {'model_path': new_model_path},room=sid)
 
 @sio.event
 async def game_start(sid, data): 
