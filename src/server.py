@@ -67,7 +67,7 @@ def get_model_list():
 
 print("search models")
 models = get_model_list()
-model_path = models[-1]
+model_path = models[-1] if len(models)>0 else None
 print("model path: ", model_path)
 
 # よくないが仮置きしている…
@@ -180,7 +180,7 @@ def connect(sid, environ):
     
     print("search models")
     models = get_model_list()
-    new_model_path = models[-1]
+    new_model_path = models[-1] if len(models)>0 else None
     print("model path: ", new_model_path)
 
     if new_model_path and new_model_path != model_path:
