@@ -7,23 +7,69 @@ import random
 import tensorflow as tf
 import copy
 import os
+import subprocess
+import datetime
 
 from cdefinitions import *
 from variables import *
+
+DEBUG = os.getenv('APP_DEBUG') == '1'
+MODEL_BUCKET_NAME = os.getenv('MODEL_BUCKET_NAME')
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
 sio.attach(app)
 # model_load= tf.keras.models.load_model('models/eval_obs_002160')
 
-epoches = 0
-base_path = "./models/eval_obs_"
-model_path = ""
+# awsの認証情報の取得
+if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY:
+    aws_dir = os.path.abspath('./.aws')
+    with open(os.path.join(aws_dir, "credentials"), mode="w") as f:
+        f.write("[default]\n")
+        f.write(f"aws_access_key_id={AWS_ACCESS_KEY_ID}\n")
+        f.write(f"aws_secret_access_key={AWS_SECRET_ACCESS_KEY}\n")
+    with open(os.path.join(aws_dir, "config"), mode="w") as f:
+        f.write("[default]\n")
+        f.write(f"region=ap-northeast-1\n")
+        f.write(f"output=json\n")
+
+model_last_get = None
+def get_model_from_s3():
+    global model_last_get
+    if model_last_get != None and datetime.datetime.now() - model_last_get < datetime.timedelta(minutes=5):
+        return
+    model_last_get = datetime.datetime.now()
+    if MODEL_BUCKET_NAME:
+        try:
+            # コマンドインジェクション攻撃を防ぐため、絶対ここにユーザーから受け取った変数を用いてはいけない
+            command = f'aws s3 sync s3://{MODEL_BUCKET_NAME} {os.path.abspath("./models")}'
+            print(f"Running $ {command}")
+            res = subprocess.check_output(command, stderr=subprocess.STDOUT, shell=True)
+            print(res)
+        except:
+            print("Error in syncing with s3.")
+
+# モデルの一覧を返します。
+def get_model_list():
+    epoches = 0
+    base_path = "./models/eval_obs_"
+    models = []
+
+    get_model_from_s3()
+
+    while os.path.exists(base_path + str(epoches).zfill(6)):
+        model_path = base_path + str(epoches).zfill(6)
+        models.append(model_path)
+        epoches += 10
+    return models
+
 print("search models")
-while os.path.exists(base_path + str(epoches).zfill(6)):
-    model_path = base_path + str(epoches).zfill(6)
-    epoches += 10
+models = get_model_list()
+model_path = models[-1]
 print("model path: ", model_path)
+
 # よくないが仮置きしている…
 model_load = tf.keras.models.Sequential([
   #tf.keras.layers.Flatten(),
@@ -119,18 +165,13 @@ def choiceSecond_absolute(stones):
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
 
-async def background_task():
-    """Example of how to send server generated events to clients."""
-    count = 0
-    while True:
-        await sio.sleep(10)
-        count += 1
-        await sio.emit('my_response', {'data': 'Server generated event'})
-
 async def index(request):
     """Serve the client-side application."""
     with open('dist/index.html') as f:
         return web.Response(text=f.read(), content_type='text/html')
+
+async def model_list(request):
+    return web.json_response(models)
 
 @sio.event
 def connect(sid, environ):
@@ -138,11 +179,8 @@ def connect(sid, environ):
     situations[sid]=[]
     
     print("search models")
-    epo = 0
-    new_model_path = ""
-    while os.path.exists(base_path + str(epo).zfill(6)):
-        new_model_path = base_path + str(epo).zfill(6)
-        epo += 10
+    models = get_model_list()
+    new_model_path = models[-1]
     print("model path: ", new_model_path)
 
     if new_model_path and new_model_path != model_path:
@@ -241,10 +279,11 @@ async def hit_stone(sid,data):
 def disconnect(sid):
     print('disconnect ', sid)
 
-app.router.add_static('/dist', 'dist')
-app.router.add_get('/', index)
+if DEBUG:
+    app.router.add_static('/dist', 'dist')
+    app.router.add_get('/', index)
+    app.router.add_get('/api/models', model_list)
 
 if __name__ == '__main__':
-    #sio.start_background_task(background_task)
     web.run_app(app)
 

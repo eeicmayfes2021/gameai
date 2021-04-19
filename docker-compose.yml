@@ -12,6 +12,8 @@ services:
     volumes:
       - ./models:/usr/src/app/models
       - ./dist:/usr/src/app/dist
+    environment:
+      - APP_DEBUG=1
   train:
     build:
       context: .

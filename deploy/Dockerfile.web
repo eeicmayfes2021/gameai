@@ -1,23 +1,20 @@
-FROM node:14 AS node-build
-WORKDIR /src
-COPY package.json ./
-RUN npm install
-COPY webpack.config.js ./
-COPY js js
-COPY static static
-RUN npm run build
-
 FROM python:3.7
 WORKDIR /usr/src/app
 
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2 \
+    && mkdir .aws
+
 ENV PYTHONUNBUFFERED 1
+ENV APP_DEBUG 0
 RUN pip install --upgrade pip
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+
 COPY src src
 RUN cd src && python setup.py build_ext --inplace
-
-COPY --from=node-build /src/dist dist
 
 CMD python src/server.py
