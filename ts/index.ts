@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { Stage3D } from './stage3d';
 import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
+import { addIntervalListener } from './helpers/button';
 import { MoveStonesMessage, WinMessage, ModelMessage } from './models/socket';
 
 const socket = io();
@@ -88,7 +89,7 @@ const handleInputs = () => {
     inputs.forEach(({ id, key, action }) => {
         // for smartphones
         const button = document.getElementById(id);
-        button?.addEventListener('click', action);
+        if(button) addIntervalListener(button, action);
 
         // for PCs
         keyBoardHelper.addListener(key, action);
