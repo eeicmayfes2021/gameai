@@ -2,7 +2,7 @@ import { io } from 'socket.io-client';
 //import { Stage2D } from './stage2d';
 import { Stage3D } from './stage3d';
 import { PointerState } from './store';
-import { keyBoardHelper } from './keyboard';
+import { keyBoardHelper } from './helpers/keyboard';
 import { MoveStonesMessage, WinMessage, ModelMessage } from './models/socket';
 
 const socket = io();

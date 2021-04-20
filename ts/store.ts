@@ -1,4 +1,4 @@
-import { clamp } from './util';
+import { clamp } from './helpers/util';
 
 const INITIAL_ANGLE = 90;
 const INITIAL_VELOCITY = 3;

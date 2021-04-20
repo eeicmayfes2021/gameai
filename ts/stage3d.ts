@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Stone } from './models/common';
-import { isPhone } from './util';
+import { isPhone } from './helpers/util';
 
 const FRICTION = 0.008;
 
