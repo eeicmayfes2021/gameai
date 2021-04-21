@@ -198,7 +198,7 @@ async def game_start(sid, data):
     
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
-        await sio.sleep(0.001)
+        await sio.sleep(0.0015)
         stillmove = False
         for stone in situations[sid]:
             stone.move()
@@ -219,7 +219,7 @@ async def hit_stone(sid,data):
     situations[sid].append( Stone("you",data["velocity"],data["theta"]) )
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
-        await sio.sleep(0.001)
+        await sio.sleep(0.0015)
         stillmove = False
         for stone in situations[sid]:
             stone.move()
@@ -237,7 +237,7 @@ async def hit_stone(sid,data):
         
         while True:
             await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
-            await sio.sleep(0.001)
+            await sio.sleep(0.0015)
             stillmove = False
             for stone in situations[sid]:
                 stone.move()
