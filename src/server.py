@@ -209,7 +209,7 @@ async def game_start(sid, data):
         if not stillmove:
             break
     #球を打っていいよの合図
-    await sio.emit('your_turn',room=sid)
+    await sio.emit('your_turn',{'left':STONE_NUM-(len(situations[sid])//2)},room=sid)
 
 
     
@@ -271,7 +271,7 @@ async def hit_stone(sid,data):
                     score-=1 #player1のreward
             await sio.emit('AI_win',{"score":score},room=sid)            
     else:
-        await sio.emit('your_turn',room=sid)
+        await sio.emit('your_turn',{'left':STONE_NUM-(len(situations[sid])//2)},room=sid)
         
         
 

@@ -4,7 +4,7 @@ import { Stage3D } from './stage3d';
 import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
-import { MoveStonesMessage, WinMessage, ModelMessage } from './models/socket';
+import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage } from './models/socket';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -20,7 +20,9 @@ const onConnect = () => {
     socket.emit('game_start', data);
 };
 
-const onYourTurn = () => {
+const onYourTurn = (data:LeftMessage) => {
+    const leftstone = document.getElementById('leftstone')!;
+    leftstone.innerHTML = `あと${data.left}回なげられます`;
     pointerState.start();
 };
 
