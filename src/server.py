@@ -124,8 +124,8 @@ def choiceSecond(stones):#後攻を選ぶ
     vtheta_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            vtheta_list.append((velocity,theta))
-            obs_list.append( test_multi((stones,velocity,theta)) )
+            vtheta_list.append((velocity,theta+180))
+            obs_list.append( test_multi((stones,velocity,theta+180)) )
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     next_score_probs=model_load.predict(np.asarray(obs_list))
     itr=0
