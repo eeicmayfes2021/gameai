@@ -9,6 +9,7 @@ cdef class Stone:
     cdef public double x[2]
     cdef public double v[2]
     cdef public int radius
+    cdef public double angle
     def __init__(self,camp,v,theta):
         self.camp=camp
         self.x=[WIDTH/2.0,0.0]
@@ -16,6 +17,7 @@ cdef class Stone:
             self.x=[WIDTH/2,HEIGHT]
         self.v=[v*cos(theta*pi/180),v*sin(theta*pi/180)]
         self.radius=BALL_RADIUS
+        self.angle=0
     cpdef move(self):
         vnorm= sqrt(self.v[0]*self.v[0]+self.v[1]*self.v[1])
         if vnorm>FRICTION:
@@ -37,6 +39,7 @@ cdef class Stone:
         elif self.x[1]<0+self.radius: #y軸方向に反転
             self.x[1]=2*(0+self.radius)-self.x[1]
             self.v[1]=-self.v[1]
+        self.angle+=3
         return True
     cpdef collision(self,other):
         dist=sqrt( (self.x[0]-other.x[0])*(self.x[0]-other.x[0])+(self.x[1]-other.x[1])*(self.x[1]-other.x[1]))
@@ -56,7 +59,8 @@ cdef class Stone:
         return {'x': str(self.x[0]),
             'y': str(self.x[1]),
             'radius':self.radius,
-            'camp':self.camp}
+            'camp':self.camp,
+            'angle':str(self.angle)}
 
 def calculatePoint(stones):
     score=0

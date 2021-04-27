@@ -3,4 +3,5 @@ export interface Stone {
     y: number;
     radius: number;
     camp: 'you' | 'AI';
+    angle: number;
 }

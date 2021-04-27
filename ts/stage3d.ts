@@ -107,9 +107,10 @@ export class Stage3D {
         stones.forEach((stone, i) => {
             if(i < this.stones.length) {
                 this.stones[i].position.set(-stone.x, 20, stone.y);
+                this.stones[i].rotation.set(0,Math.PI*stone.angle/180,0); 
             }else {
                 this.instantiateStone(stone);
-                
+
                 console.log('stone added!');
             }
         });
