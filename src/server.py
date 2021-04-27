@@ -194,7 +194,7 @@ async def game_start(sid, data):
     #相手が打つ
     #velocity,theta=choiceSecond(situations[sid])
     velocity,theta= choiceSecond(situations[sid])
-    situations[sid].append(Stone("AI",velocity,theta))
+    situations[sid] = [Stone("AI",velocity,theta)]
     
     while True:
         await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)

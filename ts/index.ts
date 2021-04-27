@@ -5,6 +5,7 @@ import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
 import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage } from './models/socket';
+import { ResultDialog } from './dialog';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -13,6 +14,8 @@ const stage = new Stage3D(600, 1000, 'canvas-2d');
 const pointerState = new PointerState((angle, velocity) => {
     stage.updatePointer(angle, velocity);
 });
+
+const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
 
 const onConnect = () => {
     console.log('gameStart!');
@@ -32,14 +35,12 @@ const onMoveStones = (data?: MoveStonesMessage) => {
 
 const onYouWin = (data: WinMessage) => {
     console.log('you win! score:', data.score);
-    const scoreboard = document.getElementById('scoreboard')!;
-    scoreboard.innerHTML = `${data.score}点であなたの勝利です．`;
+    resultDialog.show(true, data.score);
 };
 
 const onAIWin = (data: WinMessage) => {
     console.log('AI win! score:', data.score);
-    const scoreboard = document.getElementById('scoreboard')!;
-    scoreboard.innerHTML = `${data.score}点であなたの負けです．`;
+    resultDialog.show(false, data.score);
 };
 
 const onFlick = (theta: number, velocity: number) => {
@@ -57,6 +58,17 @@ const onHit = () => {
     socket.emit('hit_stone', { theta: pointerState.angle, velocity: pointerState.velocity });
     
     pointerState.stop();
+};
+
+// ResultDialog で「戻る」ボタンを押したとき
+const onReturn = () => {
+    // do nothing
+};
+
+// ResultDialog で「もう一度」ボタンを押したとき
+const onRestart = () => {
+    stage.removeStones();
+    onConnect();
 };
 
 const handleInputs = () => {

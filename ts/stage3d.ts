@@ -99,6 +99,11 @@ export class Stage3D {
      * Update Stones' positions.
      */
     updateStones(stones: Stone[]) {
+        // restart
+        if(stones.length < this.stones.length) {
+            this.removeStones();
+        }
+
         stones.forEach((stone, i) => {
             if(i < this.stones.length) {
                 this.stones[i].position.set(-stone.x, 20, stone.y);
@@ -108,6 +113,14 @@ export class Stage3D {
                 console.log('stone added!');
             }
         });
+    }
+    
+    /**
+     * Remove all stones.
+     */
+    removeStones() {
+        this.stones.forEach((stone) => this.scene.remove(stone));
+        this.stones = [];
     }
     
     private instantiateStone(stone: Stone) {
