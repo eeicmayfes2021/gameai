@@ -13,6 +13,8 @@ const stage = new Stage3D(600, 1000, 'canvas-2d');
 
 const pointerState = new PointerState((angle, velocity) => {
     stage.updatePointer(angle, velocity);
+}, (enable) => {
+    stage.enablePointer(enable);
 });
 
 const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
