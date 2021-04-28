@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Stone } from './models/common';
-import { isPhone } from './helpers/util';
 
 const FRICTION = 0.008;
 
@@ -150,9 +149,7 @@ export class Stage3D {
     
     // 参考 : https://threejsfundamentals.org/threejs/lessons/ja/threejs-responsive.html
     private resizeRendererToDisplaySize() {
-        const [width, height] = isPhone()
-            ? [window.innerWidth, window.innerHeight]
-            : [this.canvas.clientWidth, this.canvas.clientHeight];
+        const [width, height] = [window.innerWidth, window.innerHeight];
 
         const needResize = this.canvas.width !== width || this.canvas.height !== height;
         if (needResize) {
