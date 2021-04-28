@@ -67,7 +67,7 @@ body {
     flex-grow: 2;
 }
 
-#dialog-container {
+.dialog-container {
     position: absolute;
     left: 0;
     top: 0;
@@ -80,7 +80,7 @@ body {
     display: none;
 }
 
-#dialog {
+.dialog {
     background-color: white;
     padding: 10px;
     border: 1px solid #222;
@@ -88,11 +88,13 @@ body {
     text-align: center;
 }
 
-#dialog-buttons {
+.dialog-buttons {
     display: flex;
     justify-content: center;
 }
-
+.bluebutton {
+    background-color: aqua;
+}
 @media screen and (max-width: 560px) {
     #side-control-wrapper {
         display: block;

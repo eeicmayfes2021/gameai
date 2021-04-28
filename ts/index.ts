@@ -5,7 +5,7 @@ import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
 import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage } from './models/socket';
-import { ResultDialog } from './dialog';
+import { ResultDialog,SelectDialog } from './dialog';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -18,10 +18,21 @@ const pointerState = new PointerState((angle, velocity) => {
 });
 
 const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
+const selectDialog = new SelectDialog(() => onSelecton(), () => onSelectoff());
 
 const onConnect = () => {
+    console.log("Connect")
+    selectDialog.show();
+};
+
+const onSelecton = () => {
     console.log('gameStart!');
-    const data = { test: 'yes' };
+    const data = { model: 'on' };
+    socket.emit('game_start', data);
+};
+const onSelectoff = () => {
+    console.log('gameStart!');
+    const data = { model: 'off' };
     socket.emit('game_start', data);
 };
 
