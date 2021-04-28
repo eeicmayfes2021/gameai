@@ -81,6 +81,7 @@ const onReturn = () => {
 // ResultDialog で「もう一度」ボタンを押したとき
 const onRestart = () => {
     stage.removeStones();
+    location.reload();
     onConnect();
 };
 
