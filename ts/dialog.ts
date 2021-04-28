@@ -38,3 +38,37 @@ export class ResultDialog {
         this.container.style.display = 'none';
     }
 }
+
+export class SelectDialog {
+    private container: HTMLElement;
+    private title: HTMLElement;
+    private content: HTMLElement;
+    
+    constructor(onSelecton: () => any, onSelectoff: () => any) {
+        // /dist/main.js は body の最後で読み込まれるので、これらの要素は存在すると仮定
+        // （class として作っているのに動的に生成しないのはおかしいのだが…）
+        this.container = document.getElementById('dialog-container2')!;
+        this.title = document.getElementById('dialog-title2')!;
+        this.content = document.getElementById('dialog-content2')!;
+        
+        const  onButton = document.getElementById('button-on')!;
+        onButton.addEventListener('click', (_) => {
+            this.hide();
+            onSelecton();
+        });
+
+        const offButton = document.getElementById('button-off')!;
+        offButton.addEventListener('click', (_) => {
+            this.hide();
+            onSelectoff();
+        });
+    }
+
+    show() {
+        this.container.style.display = 'flex';
+    }
+
+    hide() {
+        this.container.style.display = 'none';
+    }
+}

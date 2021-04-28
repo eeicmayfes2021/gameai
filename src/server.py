@@ -87,6 +87,22 @@ model_load = tf.keras.models.Sequential([
 model_load.compile(optimizer='adam',
               loss='sparse_categorical_crossentropy',
               metrics=['accuracy'])
+model_initial = tf.keras.models.Sequential([
+  #tf.keras.layers.Flatten(),
+  tf.keras.layers.InputLayer(input_shape=(HEIGHT//20,WIDTH//20,2)),
+  tf.keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(HEIGHT//20,WIDTH//20,2)),
+  tf.keras.layers.MaxPooling2D((2, 2)),
+  tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+  tf.keras.layers.MaxPooling2D((2, 2)),
+  tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
+  tf.keras.layers.Flatten(),
+  tf.keras.layers.Dense(64, activation=tf.nn.relu),
+  tf.keras.layers.Dropout(0.2),
+  tf.keras.layers.Dense(STONE_NUM*2+1, activation=tf.nn.softmax)
+])
+model_initial.compile(optimizer='adam',
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
 # tf.keras.models.load_model('models/eval_obs_000010')
 
 if model_path:
@@ -116,7 +132,7 @@ def test_multi(m):
     obs=stonesToObs(temp_stones)
     return obs
 
-def choiceSecond(stones):#後攻を選ぶ
+def choiceSecond(stones,model_changer):#後攻を選ぶ
     max_velocity=-1
     max_theta=-1
     max_score=-1001001001
@@ -127,7 +143,10 @@ def choiceSecond(stones):#後攻を選ぶ
             vtheta_list.append((velocity,theta))
             obs_list.append( test_multi((stones,velocity,theta)) )
     #https://note.nkmk.me/python-tensorflow-keras-basics/
-    next_score_probs=model_load.predict(np.asarray(obs_list))
+    if model_changer=='on':
+        next_score_probs=model_load.predict(np.asarray(obs_list))
+    else:
+        next_score_probs=model_initial.predict(np.asarray(obs_list))
     itr=0
     for velocity,theta in vtheta_list:
         next_score=0.0
@@ -148,23 +167,9 @@ def test_multi2(m):
     movestones(temp_stones)
     score=-calculatePoint(temp_stones)
     return score,velocity,theta
-def choiceSecond_absolute(stones):
-    max_velocity=-1
-    max_theta=-1
-    max_score=-1001001001
-    score_list=[]
-    for velocity in velocity_choices:
-        for theta in theta_choices:
-            score_list.append( test_multi2((stones,velocity,theta)) )
-    for score,velocity,theta in score_list:
-        if score>max_score:
-            max_theta=theta
-            max_velocity=velocity
-            max_score=score
-    return max_velocity,max_theta
 
 situations={}#盤面ごとに存在するカーリングの球の状態を記録する
-
+ifmodelon={}
 async def index(request):
     """Serve the client-side application."""
     with open('dist/index.html') as f:
@@ -177,23 +182,24 @@ async def model_list(request):
 async def connect(sid, environ):
     print("connect ", sid)
     situations[sid]=[]
-    
-    print("search models")
-    models = get_model_list()
-    new_model_path = models[-1] if len(models)>0 else None
-    print("model path: ", new_model_path)
-
-    if new_model_path and new_model_path != model_path:
-        print("change model")
-        model_load = tf.keras.models.load_model(new_model_path)
-    await sio.emit('model_load', {'model_path': new_model_path},room=sid)
 
 @sio.event
 async def game_start(sid, data): 
-    print("message ", data['test'])
+    print("game_start model: ", data['model'])
+    ifmodelon[sid]=data['model']
+    if ifmodelon[sid]=='on':
+        print("search models")
+        models = get_model_list()
+        new_model_path = models[-1] if len(models)>0 else None
+        print("model path: ", new_model_path)
+
+        if new_model_path and new_model_path != model_path:
+            print("change model")
+            model_load = tf.keras.models.load_model(new_model_path)
+        await sio.emit('model_load', {'model_path': new_model_path})#全てのroomでモデルが変更される
+
     #相手が打つ
-    #velocity,theta=choiceSecond(situations[sid])
-    velocity,theta= choiceSecond(situations[sid])
+    velocity,theta= choiceSecond(situations[sid],ifmodelon[sid])
     situations[sid] = [Stone("AI",velocity,theta)]
     
     while True:
@@ -230,9 +236,8 @@ async def hit_stone(sid,data):
         if not stillmove:
             break
     #相手が打つ
-    #velocity,theta=choiceSecond(situations[sid])
     if len(situations[sid])<STONE_NUM*2:
-        velocity,theta=choiceSecond(situations[sid])
+        velocity,theta=choiceSecond(situations[sid],ifmodelon[sid])
         situations[sid].append(Stone("AI",velocity,theta))
         
         while True:
@@ -279,6 +284,8 @@ async def hit_stone(sid,data):
 @sio.event
 def disconnect(sid):
     print('disconnect ', sid)
+    situations.pop(sid, "Not Found")
+    ifmodelon.pop(sid, "Not Found")
 
 if DEBUG:
     app.router.add_static('/dist', 'dist')
