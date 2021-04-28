@@ -76,6 +76,7 @@ export class Stage3D {
         const line = new THREE.Line(geometry, material);    
         line.position.x = -this.stageSize.x / 2;
         line.position.y = 15;
+        line.visible = false;
         
         this.scene.add(line);
         
@@ -145,6 +146,10 @@ export class Stage3D {
         
         const length = velocity * (velocity/FRICTION) / 2;
         this.line.scale.setScalar(length);
+    }
+    
+    enablePointer(enable: boolean) {
+        this.line.visible = enable;
     }
     
     // 参考 : https://threejsfundamentals.org/threejs/lessons/ja/threejs-responsive.html
