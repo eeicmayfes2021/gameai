@@ -1,7 +1,13 @@
+@font-face{ 
+    font-family: 'mplus-1c-regular';
+    src: url('/dist/Mplus1-Regular.woff') format('woff');
+}
+
 body {
     width: 100%;
     height: 100%;
     margin: 0;
+    font-family: 'mplus-1c-regular';
 }
 
 #canvas-container {
@@ -45,10 +51,21 @@ body {
     margin: 5px;
 }
 
+button {
+    font-family: 'mplus-1c-regular';
+    background: #00324BAA 0% 0% no-repeat padding-box;
+    border: 5px solid #0095F2;
+    border-radius: 16px;
+    opacity: 1;
+    color: white;
+}
+
+button:hover, .button-hover {
+    background-color: #51819FAA;
+}
+
 /* この辺のスタイルは適当なので要修正 */
 .button-lr, .button-ud, .button-hit {
-    border: 2px solid #222;
-    border-radius: 5px;
     margin: 5px;
     user-select: none;
 }
@@ -81,20 +98,24 @@ body {
 }
 
 .dialog {
-    background-color: white;
+    background-color: #002836;
     padding: 10px;
     border: 1px solid #222;
     border-radius: 5px;
     text-align: center;
+    color: white;
 }
 
 .dialog-buttons {
     display: flex;
     justify-content: center;
 }
-.bluebutton {
-    background-color: aqua;
+
+.dialog-buttons > button {
+    padding: 5px 15px;
+    margin: 5px;
 }
+
 @media screen and (max-width: 560px) {
     #side-control-wrapper {
         display: block;
