@@ -5,13 +5,13 @@
       "name": "app",
       "image": "554746007656.dkr.ecr.ap-northeast-1.amazonaws.com/gameai-app:docker_image_tag",
       "essential": true,
-      "memoryReservation": 256
+      "memoryReservation": 512
     },
     {
       "name": "nginx",
       "image": "554746007656.dkr.ecr.ap-northeast-1.amazonaws.com/gameai-nginx:docker_image_tag",
       "essential": true,
-      "memoryReservation": 64,
+      "memoryReservation": 256,
       "portMappings": [
         {
           "hostPort": 80,
