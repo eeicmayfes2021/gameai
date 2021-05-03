@@ -83,7 +83,10 @@ export class Stage3D {
         if(useReflector) {
             const ref = new Reflector(
                 new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
-                { }
+                {
+                    textureWidth: window.innerWidth * window.devicePixelRatio,
+                    textureHeight: window.innerHeight * window.devicePixelRatio
+                }
             );
             
             ref.position.x = - this.stageSize.x / 2;
