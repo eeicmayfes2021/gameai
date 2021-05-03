@@ -10,7 +10,10 @@ export class PointerState {
     private _angle = INITIAL_ANGLE;
     private _velocity = INITIAL_VELOCITY;
     
-    constructor(private onChange?: (angle: number, velocity: number) => void) {}
+    constructor(
+        private onChange?: (angle: number, velocity: number) => void,
+        private onEnableChange?: (enable: boolean) => any
+    ) {}
     
     get enable(): boolean {
         return this._enable;
@@ -28,11 +31,13 @@ export class PointerState {
         this._enable = true;
         this._angle = INITIAL_ANGLE;
         this._velocity = INITIAL_VELOCITY;        
+        this.onEnableChange?.(this._enable);
         this.postProcess();
     }
     
     stop() {
         this._enable = false;
+        this.onEnableChange?.(this._enable);
     }
 
     turnLeft() {

@@ -11,3 +11,7 @@ export interface WinMessage {
 export interface ModelMessage {
     model_path: string;
 }
+
+export interface LeftMessage {
+    left: number;
+}

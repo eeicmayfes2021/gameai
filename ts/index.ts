@@ -4,7 +4,8 @@ import { Stage3D } from './stage3d';
 import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
-import { MoveStonesMessage, WinMessage, ModelMessage } from './models/socket';
+import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage } from './models/socket';
+import { ResultDialog,SelectDialog } from './dialog';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -12,15 +13,32 @@ const stage = new Stage3D(600, 1000, 'canvas-2d');
 
 const pointerState = new PointerState((angle, velocity) => {
     stage.updatePointer(angle, velocity);
+}, (enable) => {
+    stage.enablePointer(enable);
 });
 
+const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
+const selectDialog = new SelectDialog(() => onSelecton(), () => onSelectoff());
+
 const onConnect = () => {
+    console.log("Connect")
+    selectDialog.show();
+};
+
+const onSelecton = () => {
     console.log('gameStart!');
-    const data = { test: 'yes' };
+    const data = { model: 'on' };
+    socket.emit('game_start', data);
+};
+const onSelectoff = () => {
+    console.log('gameStart!');
+    const data = { model: 'off' };
     socket.emit('game_start', data);
 };
 
-const onYourTurn = () => {
+const onYourTurn = (data:LeftMessage) => {
+    const leftstone = document.getElementById('leftstone')!;
+    leftstone.innerHTML = `あと${data.left}回なげられます`;
     pointerState.start();
 };
 
@@ -30,14 +48,12 @@ const onMoveStones = (data?: MoveStonesMessage) => {
 
 const onYouWin = (data: WinMessage) => {
     console.log('you win! score:', data.score);
-    const scoreboard = document.getElementById('scoreboard')!;
-    scoreboard.innerHTML = `${data.score}点であなたの勝利です．`;
+    resultDialog.show(true, data.score);
 };
 
 const onAIWin = (data: WinMessage) => {
     console.log('AI win! score:', data.score);
-    const scoreboard = document.getElementById('scoreboard')!;
-    scoreboard.innerHTML = `${data.score}点であなたの負けです．`;
+    resultDialog.show(false, data.score);
 };
 
 const onFlick = (theta: number, velocity: number) => {
@@ -55,6 +71,17 @@ const onHit = () => {
     socket.emit('hit_stone', { theta: pointerState.angle, velocity: pointerState.velocity });
     
     pointerState.stop();
+};
+
+// ResultDialog で「戻る」ボタンを押したとき
+const onReturn = () => {
+    // do nothing
+};
+
+// ResultDialog で「もう一度」ボタンを押したとき
+const onRestart = () => {
+    stage.removeStones();
+    onConnect();
 };
 
 const handleInputs = () => {

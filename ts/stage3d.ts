@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Reflector } from 'three/examples/jsm/objects/Reflector';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Stone } from './models/common';
-import { isPhone } from './helpers/util';
 
 const FRICTION = 0.008;
-const STONE_Y = 10;
+const STONE_Y = 0;
 
 /**
  * 注意 : Stage2D とは座標系が異なるため、x の値を反転させている。
@@ -20,6 +20,9 @@ export class Stage3D {
     private stones: THREE.Object3D[];
     private line: THREE.Line;
     private skybox: THREE.Texture;
+
+    private stoneRedModel?: THREE.Object3D;
+    private stoneBlueModel?: THREE.Object3D;
 
     /**
      * Initialize Stage2D.
@@ -49,7 +52,7 @@ export class Stage3D {
 
         this.stones = [];
         
-        this.render();
+        this.setupModels().then((_) => this.render());
     }
     
     private constructStage() {
@@ -111,6 +114,7 @@ export class Stage3D {
         const line = new THREE.Line(geometry, material);    
         line.position.x = -this.stageSize.x / 2;
         line.position.y = 15;
+        line.visible = false;
         
         this.scene.add(line);
         
@@ -127,6 +131,36 @@ export class Stage3D {
         const texture = loader.load(urls);
         texture.mapping = THREE.CubeReflectionMapping;
         return texture;
+    }
+
+    private async setupModels() {
+        const loader = new GLTFLoader();
+
+        const paths = [
+            '/dist/models/stone-red.glb',
+            '/dist/models/stone-blue.glb'
+        ];
+        
+        const promises = paths.map(async (path) => {
+            const gltf = await loader.loadAsync(path);
+            const model = gltf.scene;
+
+            // TODO: remove setScalar
+            model.scale.setScalar(1.5);
+            model.traverse((object) => {
+                if(object instanceof THREE.Mesh) {
+                    object.castShadow = true;
+                    
+                    if(object.material instanceof THREE.MeshStandardMaterial) {
+                        object.material.envMap = this.skybox;
+                    }
+                }
+            });
+            
+            return model;
+        });
+        
+        [this.stoneRedModel, this.stoneBlueModel] = await Promise.all(promises);
     }
     
     private render() {
@@ -145,6 +179,11 @@ export class Stage3D {
      * Update Stones' positions.
      */
     updateStones(stones: Stone[]) {
+        // restart
+        if(stones.length < this.stones.length) {
+            this.removeStones();
+        }
+
         stones.forEach((stone, i) => {
             if(i < this.stones.length) {
                 this.stones[i].position.set(-stone.x, STONE_Y, stone.y);
@@ -156,19 +195,22 @@ export class Stage3D {
         });
     }
     
+    /**
+     * Remove all stones.
+     */
+    removeStones() {
+        this.stones.forEach((stone) => this.scene.remove(stone));
+        this.stones = [];
+    }
+    
     private instantiateStone(stone: Stone) {
-        const newStone = new THREE.Mesh(
-            new THREE.CylinderGeometry(stone.radius, stone.radius, 20),
-            new THREE.MeshPhongMaterial({
-                color: stone.camp === 'you' ? 'red': 'blue',
-                envMap: this.skybox,
-                combine: THREE.MixOperation,
-                reflectivity: 0.5
-            })
-        );
+        const model = stone.camp === 'you' ? this.stoneRedModel : this.stoneBlueModel;
+        if(!model) {
+            console.error('model not loaded');
+            return;
+        }
+        const newStone = model.clone(true);
         newStone.position.set(-stone.x, STONE_Y, stone.y);
-        newStone.castShadow = true;
-        newStone.receiveShadow = true;
 
         this.scene.add(newStone);
         this.stones.push(newStone);
@@ -187,11 +229,13 @@ export class Stage3D {
         this.line.scale.setScalar(length);
     }
     
+    enablePointer(enable: boolean) {
+        this.line.visible = enable;
+    }
+    
     // 参考 : https://threejsfundamentals.org/threejs/lessons/ja/threejs-responsive.html
     private resizeRendererToDisplaySize() {
-        const [width, height] = isPhone()
-            ? [window.innerWidth, window.innerHeight]
-            : [this.canvas.clientWidth, this.canvas.clientHeight];
+        const [width, height] = [window.innerWidth, window.innerHeight];
 
         const needResize = this.canvas.width !== width || this.canvas.height !== height;
         if (needResize) {
