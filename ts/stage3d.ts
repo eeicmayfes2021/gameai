@@ -2,7 +2,9 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Reflector } from 'three/examples/jsm/objects/Reflector';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import Stats from 'three/examples/jsm/libs/stats.module';
 import { Stone } from './models/common';
+import { isPhone } from './helpers/util';
 
 const FRICTION = 0.008;
 const STONE_Y = 0;
@@ -20,6 +22,8 @@ export class Stage3D {
     private stones: THREE.Object3D[];
     private line: THREE.Line;
     private skybox: THREE.Texture;
+    
+    private stats: Stats;
 
     private stoneRedModel?: THREE.Object3D;
     private stoneBlueModel?: THREE.Object3D;
@@ -34,7 +38,7 @@ export class Stage3D {
         this.skybox = this.setupSkybox();
         this.scene.background = this.skybox;
 
-        this.constructStage();
+        this.constructStage(!isPhone());
         
         this.line = this.setupPointer();
         
@@ -52,17 +56,21 @@ export class Stage3D {
 
         this.stones = [];
         
+        this.stats = Stats();
+        this.stats.showPanel(0);
+        document.body.appendChild(this.stats.dom);
+        
         this.setupModels().then((_) => this.render());
     }
     
-    private constructStage() {
+    private constructStage(useReflector: boolean, useShadow: boolean = false) {
         const loader = new THREE.TextureLoader();
 
         const base = new THREE.Mesh(
             new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
             new THREE.MeshPhongMaterial({
                 map: loader.load('/dist/board.png'),
-                transparent: true,
+                transparent: useReflector,
                 opacity: 0.5
             })
         );
@@ -72,29 +80,33 @@ export class Stage3D {
         base.receiveShadow = true;
         this.scene.add(base);
         
-        const ref = new Reflector(
-            new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
-            { }
-        );
-        
-        ref.position.x = - this.stageSize.x / 2;
-        ref.position.z = this.stageSize.y / 2;
-        ref.position.y = -1;
-        ref.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
-        
-        this.scene.add(ref);
+        if(useReflector) {
+            const ref = new Reflector(
+                new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
+                { }
+            );
+            
+            ref.position.x = - this.stageSize.x / 2;
+            ref.position.z = this.stageSize.y / 2;
+            ref.position.y = -1;
+            ref.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+            
+            this.scene.add(ref);
+        }
         
         const light = new THREE.DirectionalLight(0xffffff, 1);
         light.position.set(400, 500, 300);
         light.target.position.set(-this.stageSize.x / 2, 0, this.stageSize.y / 2);
 
-        light.castShadow = true;
-        light.shadow.camera.near = 10;
-        light.shadow.camera.far = 1500;
-        light.shadow.camera.left = -600;
-        light.shadow.camera.right = 600;
-        light.shadow.camera.top = 300;
-        light.shadow.camera.bottom = -300;
+        if(useShadow) {
+            light.castShadow = true;
+            light.shadow.camera.near = 10;
+            light.shadow.camera.far = 1500;
+            light.shadow.camera.left = -600;
+            light.shadow.camera.right = 600;
+            light.shadow.camera.top = 300;
+            light.shadow.camera.bottom = -300;
+        }
 
         this.scene.add(light);
         this.scene.add(light.target);
@@ -135,6 +147,18 @@ export class Stage3D {
 
     private async setupModels() {
         const loader = new GLTFLoader();
+        const textureLoader = new THREE.TextureLoader();
+        
+        const fakeShadow = new THREE.Mesh(
+            new THREE.PlaneGeometry(50, 50),
+            new THREE.MeshBasicMaterial({
+                map: textureLoader.load('/dist/roundshadow.png'),
+                transparent: true,
+                depthWrite: false
+            })
+        );
+        fakeShadow.position.y = 0.1;
+        fakeShadow.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
 
         const paths = [
             '/dist/models/stone-red.glb',
@@ -156,6 +180,7 @@ export class Stage3D {
                     }
                 }
             });
+            model.children.push(fakeShadow);
             
             return model;
         });
@@ -171,6 +196,7 @@ export class Stage3D {
             this.camera.updateProjectionMatrix();
         }
         
+        this.stats.update();
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
