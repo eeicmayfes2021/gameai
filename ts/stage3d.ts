@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { Stone } from './models/common';
 
 const FRICTION = 0.008;
+const STONE_Y = 5;
 
 /**
  * 注意 : Stage2D とは座標系が異なるため、x の値を反転させている。
@@ -16,6 +18,9 @@ export class Stage3D {
     private stageSize: THREE.Vector2;
     private stones: THREE.Object3D[];
     private line: THREE.Line;
+
+    private stoneRedModel?: THREE.Object3D;
+    private stoneBlueModel?: THREE.Object3D;
 
     /**
      * Initialize Stage2D.
@@ -41,7 +46,7 @@ export class Stage3D {
 
         this.stones = [];
         
-        this.render();
+        this.setupModels().then((_) => this.render());
     }
     
     private constructStage() {
@@ -83,6 +88,17 @@ export class Stage3D {
         return line;
     }
     
+    private setupModels() {
+        const loader = new GLTFLoader();
+
+        const stoneRedLoader = loader.loadAsync('/dist/models/stone-red.glb')
+            .then((gltf) => { this.stoneRedModel = gltf.scene; this.stoneRedModel.scale.setScalar(1.5); });
+        const stoneBlueLoader = loader.loadAsync('/dist/models/stone-blue.glb')
+            .then((gltf) => { this.stoneBlueModel = gltf.scene; this.stoneBlueModel.scale.setScalar(1.5); });
+        
+        return Promise.all([stoneRedLoader, stoneBlueLoader]);
+    }
+    
     private render() {
         requestAnimationFrame(() => { this.render(); });
         
@@ -106,7 +122,7 @@ export class Stage3D {
 
         stones.forEach((stone, i) => {
             if(i < this.stones.length) {
-                this.stones[i].position.set(-stone.x, 20, stone.y);
+                this.stones[i].position.set(-stone.x, STONE_Y, stone.y);
             }else {
                 this.instantiateStone(stone);
                 
@@ -124,12 +140,13 @@ export class Stage3D {
     }
     
     private instantiateStone(stone: Stone) {
-        //TODO: remove magic number (20)
-        const newStone = new THREE.Mesh(
-            new THREE.CylinderGeometry(stone.radius, stone.radius, 20),
-            new THREE.MeshStandardMaterial({ color: stone.camp === 'you' ? 'red': 'blue' })
-        );
-        newStone.position.set(-stone.x, 20, stone.y);
+        const model = stone.camp === 'you' ? this.stoneRedModel : this.stoneBlueModel;
+        if(!model) {
+            console.error('model not loaded');
+            return;
+        }
+        const newStone = model.clone(true);
+        newStone.position.set(-stone.x, STONE_Y, stone.y);
 
         this.scene.add(newStone);
         this.stones.push(newStone);
