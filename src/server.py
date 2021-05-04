@@ -202,8 +202,12 @@ async def game_start(sid, data):
     velocity,theta= choiceSecond(situations[sid],ifmodelon[sid])
     situations[sid] = [Stone("AI",velocity,theta)]
     
+    send_cnt=0
+    send_interval=10
     while True:
-        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        if send_cnt%send_interval==0:
+            await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        send_cnt+=1
         await sio.sleep(0.0015)
         stillmove = False
         for stone in situations[sid]:
@@ -214,6 +218,7 @@ async def game_start(sid, data):
             pair[0].collision(pair[1])
         if not stillmove:
             break
+    await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
     #球を打っていいよの合図
     await sio.emit('your_turn',{'left':STONE_NUM-(len(situations[sid])//2)},room=sid)
 
@@ -223,8 +228,12 @@ async def game_start(sid, data):
 async def hit_stone(sid,data):
     print("hit_stone")
     situations[sid].append( Stone("you",data["velocity"],data["theta"]) )
+    send_cnt=0
+    send_interval=10
     while True:
-        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        if send_cnt%send_interval==0:
+            await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        send_cnt+=1
         await sio.sleep(0.0015)
         stillmove = False
         for stone in situations[sid]:
@@ -235,13 +244,18 @@ async def hit_stone(sid,data):
             pair[0].collision(pair[1])
         if not stillmove:
             break
+    await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
     #相手が打つ
     if len(situations[sid])<STONE_NUM*2:
         velocity,theta=choiceSecond(situations[sid],ifmodelon[sid])
         situations[sid].append(Stone("AI",velocity,theta))
         
+        send_cnt=0
+        send_interval=10
         while True:
-            await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+            if send_cnt%send_interval==0:
+                await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+            send_cnt+=1
             await sio.sleep(0.0015)
             stillmove = False
             for stone in situations[sid]:
@@ -252,6 +266,7 @@ async def hit_stone(sid,data):
                 pair[0].collision(pair[1])
             if not stillmove:
                 break
+        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
     if len(situations[sid])==STONE_NUM*2 :
         #ゲーム終わり
         player1_min_dist=1001001001
