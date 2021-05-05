@@ -11,7 +11,7 @@ cdef class Stone:
     cdef public int radius
     def __init__(self,camp,v,theta):
         self.camp=camp
-        self.x=[WIDTH/2.0,0.0]
+        self.x=[WIDTH/2.0,30.0]
         if self.camp=="AI":
             self.x=[WIDTH/2,HEIGHT]
         self.v=[v*cos(theta*pi/180),v*sin(theta*pi/180)]
@@ -44,8 +44,18 @@ cdef class Stone:
             return
         #衝突している時
         #運動方程式解いた
-        e= [(self.x[0]-other.x[0])/dist,(self.x[1]-other.x[1])/dist]
-        t=(self.v[0]*e[0]+self.v[1]*e[1])-(other.v[0]*e[0]+other.v[1]*e[1])
+        e = [(other.x[0] - self.x[0])/dist,(other.x[1] - self.x[1])/dist] #逆向き
+        t = (self.v[0]*e[0]+self.v[1]*e[1])-(other.v[0]*e[0]+other.v[1]*e[1])
+
+        avex = [self.x[0]/2 + other.x[0]/2, self.x[1]/2 + other.x[1]/2] #平均
+        avev = [self.v[0]/2 + other.v[0]/2, self.v[1]/2 + other.v[1]/2] #平均
+
+        rev1 = [self.v[0] - avev[0], self.v[1] - avev[1]]
+        rev2 = [other.v[0] - avev[0], other.v[1] - avev[1]]
+
+        if rev1[0] * e[0] + rev1[1]*e[1] < 0 and rev2[0]*e[0] + rev2[1]*e[1]>0:
+            return
+
         self.v=[self.v[0]-t*e[0],self.v[1]-t*e[1]]
         other.v=[other.v[0]+t*e[0],other.v[1]+t*e[1]]
     cpdef return_dist(self):

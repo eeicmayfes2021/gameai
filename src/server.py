@@ -230,7 +230,10 @@ async def hit_stone(sid,data):
     situations[sid].append( Stone("you",data["velocity"],data["theta"]) )
     send_cnt=0
     send_interval=10
+    print("現在の石の個数： ", len(situations[sid]))
+    print("ここから\n\n=====================================================================================================")
     while True:
+        # print("data", [[stone.encode(), stone.v[0], stone.v[1]] for stone in situations[sid]])
         if send_cnt%send_interval==0:
             await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
         send_cnt+=1
