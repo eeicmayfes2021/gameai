@@ -140,8 +140,8 @@ def choiceSecond(stones,model_changer):#後攻を選ぶ
     vtheta_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            vtheta_list.append((velocity,theta))
-            obs_list.append( test_multi((stones,velocity,theta)) )
+            vtheta_list.append((velocity,theta+180))
+            obs_list.append( test_multi((stones,velocity,theta+180)) )
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     if model_changer=='on':
         next_score_probs=model_load.predict(np.asarray(obs_list))
@@ -212,8 +212,7 @@ async def game_start(sid, data):
         stillmove = False
         for stone in situations[sid]:
             stone.move()
-            if stone.v[0]!=0 or stone.v[1]!=0:
-                stillmove=True
+            stillmove= stillmove or stone.v[0]!=0 or stone.v[1]!=0
         for pair in itertools.combinations(situations[sid], 2): #衝突判定
             pair[0].collision(pair[1])
         if not stillmove:
@@ -230,8 +229,8 @@ async def hit_stone(sid,data):
     situations[sid].append( Stone("you",data["velocity"],data["theta"]) )
     send_cnt=0
     send_interval=10
-    print("現在の石の個数： ", len(situations[sid]))
-    print("ここから\n\n=====================================================================================================")
+    #print("現在の石の個数： ", len(situations[sid]))
+    #print("ここから\n\n=====================================================================================================")
     while True:
         # print("data", [[stone.encode(), stone.v[0], stone.v[1]] for stone in situations[sid]])
         if send_cnt%send_interval==0:
@@ -241,8 +240,7 @@ async def hit_stone(sid,data):
         stillmove = False
         for stone in situations[sid]:
             stone.move()
-            if stone.v[0]!=0 or stone.v[1]!=0:
-                stillmove=True
+            stillmove= stillmove or stone.v[0]!=0 or stone.v[1]!=0
         for pair in itertools.combinations(situations[sid], 2): #衝突判定
             pair[0].collision(pair[1])
         if not stillmove:
@@ -263,8 +261,7 @@ async def hit_stone(sid,data):
             stillmove = False
             for stone in situations[sid]:
                 stone.move()
-                if stone.v[0]!=0 or stone.v[1]!=0:
-                    stillmove=True
+                stillmove= stillmove or stone.v[0]!=0 or stone.v[1]!=0
             for pair in itertools.combinations(situations[sid], 2): #衝突判定
                 pair[0].collision(pair[1])
             if not stillmove:
