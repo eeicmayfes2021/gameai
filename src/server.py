@@ -310,7 +310,7 @@ def send_result(AI_win, ifmodelon):
     response = requests.post(
         API_URL + "/result",
         json.dumps({
-            "model": model_path if not ifmodelon else "000_initial",
+            "model": model_path if ifmodelon == "on" else "initial",
             "token": API_TOKEN,
             "win": AI_win,
             "lose": not AI_win, 
