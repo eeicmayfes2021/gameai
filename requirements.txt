@@ -4,3 +4,4 @@ tensorflow
 cpython
 cython
 matplotlib
+requests

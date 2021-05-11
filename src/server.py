@@ -9,6 +9,8 @@ import copy
 import os
 import subprocess
 import datetime
+import requests
+import json
 
 from cdefinitions import *
 from variables import *
@@ -17,6 +19,8 @@ DEBUG = os.getenv('APP_DEBUG') == '1'
 MODEL_BUCKET_NAME = os.getenv('MODEL_BUCKET_NAME')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+API_URL = 'https://0k33okho4j.execute-api.ap-northeast-1.amazonaws.com/api'
+API_TOKEN = 'qYpG2xGo8osuyQqYLLa3Ehp32HLdL2eGHT2YJrC2rHj3P82X9w'
 
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
@@ -185,6 +189,7 @@ async def connect(sid, environ):
 
 @sio.event
 async def game_start(sid, data): 
+    global model_path, model_load
     print("game_start model: ", data['model'])
     ifmodelon[sid]=data['model']
     if ifmodelon[sid]=='on':
@@ -196,6 +201,7 @@ async def game_start(sid, data):
         if new_model_path and new_model_path != model_path:
             print("change model")
             model_load = tf.keras.models.load_model(new_model_path)
+        model_path = new_model_path
         await sio.emit('model_load', {'model_path': new_model_path})#全てのroomでモデルが変更される
 
     #相手が打つ
@@ -283,17 +289,33 @@ async def hit_stone(sid,data):
                 dist=stone.return_dist()
                 if stone.camp=='you' and dist<player2_min_dist:
                     score+=1 #player1のreward
+            send_result(False, ifmodelon[sid]) # 結果を記録
             await sio.emit('you_win',{"score":score},room=sid)
         else: #win player 2
             for stone in situations[sid]:
                 dist=stone.return_dist()
                 if stone.camp=='AI' and dist<player1_min_dist:
                     score-=1 #player1のreward
+            send_result(True, ifmodelon[sid]) # 結果を記録
             await sio.emit('AI_win',{"score":score},room=sid)            
     else:
         await sio.emit('your_turn',{'left':STONE_NUM-(len(situations[sid])//2)},room=sid)
         
-        
+
+# 結果をAPIに送信
+def send_result(AI_win, ifmodelon):
+    if not MODEL_BUCKET_NAME:
+        return
+    response = requests.post(
+        API_URL + "/result",
+        json.dumps({
+            "model": model_path if not ifmodelon else "000_initial",
+            "token": API_TOKEN,
+            "win": AI_win,
+            "lose": not AI_win, 
+        }),
+        headers={'Content-Type': 'application/json'},
+    )
 
 
 @sio.event
