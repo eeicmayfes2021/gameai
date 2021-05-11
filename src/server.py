@@ -306,6 +306,7 @@ async def hit_stone(sid,data):
 def send_result(AI_win, ifmodelon):
     if not MODEL_BUCKET_NAME:
         return
+    print(f"Result send AI: {AI_win} model: {model_path} ifmodelon: {ifmodelon}")
     response = requests.post(
         API_URL + "/result",
         json.dumps({
