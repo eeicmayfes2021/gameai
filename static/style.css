@@ -103,6 +103,7 @@ body {
     align-items: center;
     background-color: #000000AA;
     display: none;
+    z-index: 200;
 }
 
 .dialog {
