@@ -21,6 +21,7 @@ const pointerState = new PointerState((angle, velocity) => {
 const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
 const selectDialog = new SelectDialog(() => onSelecton(), () => onSelectoff());
 let ifmodelon=true;
+let model_epoch = 0;
 
 const onConnect = () => {
     console.log("Connect")
@@ -95,12 +96,12 @@ const onMoveStones = (data?: MoveStonesMessage) => {
 
 const onYouWin = (data: WinMessage) => {
     console.log('you win! score:', data.score);
-    resultDialog.show(true, data.score);
+    resultDialog.show(true, data.score, ifmodelon, model_epoch);
 };
 
 const onAIWin = (data: WinMessage) => {
     console.log('AI win! score:', data.score);
-    resultDialog.show(false, data.score);
+    resultDialog.show(false, data.score, ifmodelon, model_epoch);
 };
 
 const onFlick = (theta: number, velocity: number) => {
@@ -111,7 +112,7 @@ const onModelLoad = (data:ModelMessage) => {
     console.log('model:', data.model_path);
     const model_message = document.getElementById('model_message')!;
     if(ifmodelon && data.model_path){
-        const model_epoch=parseInt(data.model_path.substring(18))*100
+        model_epoch=parseInt(data.model_path.substring(18))*100
         model_message.innerHTML = `現在のモデルは${model_epoch}試合分学習したもの`;
     }else{
         model_message.innerHTML = `現在のモデルは0試合分学習したもの`;

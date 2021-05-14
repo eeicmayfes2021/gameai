@@ -141,6 +141,16 @@ button:hover, .button-hover {
     color: white;
 }
 
+.dialog #dialog-sharebutton {
+    padding: 5px 10px;
+    margin: 5px 10px;
+    background-color: #00ACED;
+    color: white;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
 .dialog-buttons {
     display: flex;
     justify-content: center;
