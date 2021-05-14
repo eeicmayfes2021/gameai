@@ -9,6 +9,8 @@ import copy
 import os
 import subprocess
 import datetime
+import requests
+import json
 
 from cdefinitions import *
 from variables import *
@@ -17,6 +19,8 @@ DEBUG = os.getenv('APP_DEBUG') == '1'
 MODEL_BUCKET_NAME = os.getenv('MODEL_BUCKET_NAME')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+API_URL = 'https://0k33okho4j.execute-api.ap-northeast-1.amazonaws.com/api'
+API_TOKEN = 'qYpG2xGo8osuyQqYLLa3Ehp32HLdL2eGHT2YJrC2rHj3P82X9w'
 
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
 app = web.Application()
@@ -140,8 +144,8 @@ def choiceSecond(stones,model_changer):#後攻を選ぶ
     vtheta_list=[]
     for velocity in velocity_choices:
         for theta in theta_choices:
-            vtheta_list.append((velocity,theta))
-            obs_list.append( test_multi((stones,velocity,theta)) )
+            vtheta_list.append((velocity,theta+180))
+            obs_list.append( test_multi((stones,velocity,theta+180)) )
     #https://note.nkmk.me/python-tensorflow-keras-basics/
     if model_changer=='on':
         next_score_probs=model_load.predict(np.asarray(obs_list))
@@ -185,6 +189,7 @@ async def connect(sid, environ):
 
 @sio.event
 async def game_start(sid, data): 
+    global model_path, model_load
     print("game_start model: ", data['model'])
     ifmodelon[sid]=data['model']
     if ifmodelon[sid]=='on':
@@ -196,24 +201,29 @@ async def game_start(sid, data):
         if new_model_path and new_model_path != model_path:
             print("change model")
             model_load = tf.keras.models.load_model(new_model_path)
+        model_path = new_model_path
         await sio.emit('model_load', {'model_path': new_model_path})#全てのroomでモデルが変更される
 
     #相手が打つ
     velocity,theta= choiceSecond(situations[sid],ifmodelon[sid])
     situations[sid] = [Stone("AI",velocity,theta)]
     
+    send_cnt=0
+    send_interval=10
     while True:
-        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        if send_cnt%send_interval==0:
+            await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        send_cnt+=1
         await sio.sleep(0.0015)
         stillmove = False
         for stone in situations[sid]:
             stone.move()
-            if stone.v[0]!=0 or stone.v[1]!=0:
-                stillmove=True
+            stillmove= stillmove or stone.v[0]!=0 or stone.v[1]!=0
         for pair in itertools.combinations(situations[sid], 2): #衝突判定
             pair[0].collision(pair[1])
         if not stillmove:
             break
+    await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
     #球を打っていいよの合図
     await sio.emit('your_turn',{'left':STONE_NUM-(len(situations[sid])//2)},room=sid)
 
@@ -223,35 +233,46 @@ async def game_start(sid, data):
 async def hit_stone(sid,data):
     print("hit_stone")
     situations[sid].append( Stone("you",data["velocity"],data["theta"]) )
+    send_cnt=0
+    send_interval=10
+    #print("現在の石の個数： ", len(situations[sid]))
+    #print("ここから\n\n=====================================================================================================")
     while True:
-        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        # print("data", [[stone.encode(), stone.v[0], stone.v[1]] for stone in situations[sid]])
+        if send_cnt%send_interval==0:
+            await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+        send_cnt+=1
         await sio.sleep(0.0015)
         stillmove = False
         for stone in situations[sid]:
             stone.move()
-            if stone.v[0]!=0 or stone.v[1]!=0:
-                stillmove=True
+            stillmove= stillmove or stone.v[0]!=0 or stone.v[1]!=0
         for pair in itertools.combinations(situations[sid], 2): #衝突判定
             pair[0].collision(pair[1])
         if not stillmove:
             break
+    await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
     #相手が打つ
     if len(situations[sid])<STONE_NUM*2:
         velocity,theta=choiceSecond(situations[sid],ifmodelon[sid])
         situations[sid].append(Stone("AI",velocity,theta))
         
+        send_cnt=0
+        send_interval=10
         while True:
-            await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+            if send_cnt%send_interval==0:
+                await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
+            send_cnt+=1
             await sio.sleep(0.0015)
             stillmove = False
             for stone in situations[sid]:
                 stone.move()
-                if stone.v[0]!=0 or stone.v[1]!=0:
-                    stillmove=True
+                stillmove= stillmove or stone.v[0]!=0 or stone.v[1]!=0
             for pair in itertools.combinations(situations[sid], 2): #衝突判定
                 pair[0].collision(pair[1])
             if not stillmove:
                 break
+        await sio.emit('move_stones', {'stones': [stone.encode() for stone in situations[sid]]},room=sid)
     if len(situations[sid])==STONE_NUM*2 :
         #ゲーム終わり
         player1_min_dist=1001001001
@@ -268,17 +289,34 @@ async def hit_stone(sid,data):
                 dist=stone.return_dist()
                 if stone.camp=='you' and dist<player2_min_dist:
                     score+=1 #player1のreward
+            send_result(False, ifmodelon[sid]) # 結果を記録
             await sio.emit('you_win',{"score":score},room=sid)
         else: #win player 2
             for stone in situations[sid]:
                 dist=stone.return_dist()
                 if stone.camp=='AI' and dist<player1_min_dist:
                     score-=1 #player1のreward
+            send_result(True, ifmodelon[sid]) # 結果を記録
             await sio.emit('AI_win',{"score":score},room=sid)            
     else:
         await sio.emit('your_turn',{'left':STONE_NUM-(len(situations[sid])//2)},room=sid)
         
-        
+
+# 結果をAPIに送信
+def send_result(AI_win, ifmodelon):
+    if not MODEL_BUCKET_NAME:
+        return
+    print(f"Result send AI: {AI_win} model: {model_path} ifmodelon: {ifmodelon}")
+    response = requests.post(
+        API_URL + "/result",
+        json.dumps({
+            "model": model_path if ifmodelon == "on" else "initial",
+            "token": API_TOKEN,
+            "win": AI_win,
+            "lose": not AI_win, 
+        }),
+        headers={'Content-Type': 'application/json'},
+    )
 
 
 @sio.event

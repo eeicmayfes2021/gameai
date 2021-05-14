@@ -1,4 +1,5 @@
 from libc.math cimport sin,cos,pi,sqrt
+import itertools
 cpdef int WIDTH=600
 cpdef int HEIGHT=1000
 cpdef int BALL_RADIUS=30
@@ -11,9 +12,9 @@ cdef class Stone:
     cdef public int radius
     def __init__(self,camp,v,theta):
         self.camp=camp
-        self.x=[WIDTH/2.0,0.0]
+        self.x=[WIDTH/2.0,BALL_RADIUS]
         if self.camp=="AI":
-            self.x=[WIDTH/2,HEIGHT]
+            self.x=[WIDTH/2,HEIGHT-BALL_RADIUS]
         self.v=[v*cos(theta*pi/180),v*sin(theta*pi/180)]
         self.radius=BALL_RADIUS
     cpdef move(self):
@@ -44,8 +45,18 @@ cdef class Stone:
             return
         #衝突している時
         #運動方程式解いた
-        e= [(self.x[0]-other.x[0])/dist,(self.x[1]-other.x[1])/dist]
-        t=(self.v[0]*e[0]+self.v[1]*e[1])-(other.v[0]*e[0]+other.v[1]*e[1])
+        e = [(other.x[0] - self.x[0])/dist,(other.x[1] - self.x[1])/dist] #逆向き
+        t = (self.v[0]*e[0]+self.v[1]*e[1])-(other.v[0]*e[0]+other.v[1]*e[1])
+
+        avex = [self.x[0]/2 + other.x[0]/2, self.x[1]/2 + other.x[1]/2] #平均
+        avev = [self.v[0]/2 + other.v[0]/2, self.v[1]/2 + other.v[1]/2] #平均
+
+        rev1 = [self.v[0] - avev[0], self.v[1] - avev[1]]
+        rev2 = [other.v[0] - avev[0], other.v[1] - avev[1]]
+
+        if rev1[0] * e[0] + rev1[1]*e[1] < 0 and rev2[0]*e[0] + rev2[1]*e[1]>0:
+            return
+
         self.v=[self.v[0]-t*e[0],self.v[1]-t*e[1]]
         other.v=[other.v[0]+t*e[0],other.v[1]+t*e[1]]
     cpdef return_dist(self):
@@ -81,14 +92,11 @@ def calculatePoint(stones):
 
 cpdef movestones(list stones):#ボトルネック#400ループぐらいする
     while True:
-        isend=True
-        iscollisionlist=[]
-        for i in range(len(stones)):
-            ismove=stones[i].move()
-            if ismove:
-                isend=False
-                for j in range(len(stones)):
-                    if i!=j and (j,i) not in iscollisionlist:
-                        stones[i].collision(stones[j])
-        if isend:
+        stillmove=False
+        for stone in stones:
+            stone.move()
+            stillmove= stillmove or stone.v[0]!=0 or stone.v[1]!=0
+        for pair in itertools.combinations(stones, 2): #衝突判定
+            pair[0].collision(pair[1])
+        if not stillmove:
             return

@@ -19,6 +19,7 @@ const pointerState = new PointerState((angle, velocity) => {
 
 const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
 const selectDialog = new SelectDialog(() => onSelecton(), () => onSelectoff());
+let ifmodelon=true;
 
 const onConnect = () => {
     console.log("Connect")
@@ -27,10 +28,11 @@ const onConnect = () => {
 
 const onSelecton = () => {
     console.log('gameStart!');
-    
+  
     stage.startIntro(() => {
         const data = { model: 'on' };
         socket.emit('game_start', data);
+      ifmodelon=true;
     });
 };
 const onSelectoff = () => {
@@ -39,6 +41,7 @@ const onSelectoff = () => {
     stage.startIntro(() => {
         const data = { model: 'off' };
         socket.emit('game_start', data);
+        ifmodelon=false;
     });
 };
 
@@ -68,6 +71,11 @@ const onFlick = (theta: number, velocity: number) => {
 
 const onModelLoad = (data:ModelMessage) => {
     console.log('model:', data.model_path);
+    if(ifmodelon){
+        const model_message = document.getElementById('model_message')!;
+        const model_epoch=parseInt(data.model_path.substring(18))*100
+        model_message.innerHTML = `現在のモデルは${model_epoch}試合分学習したもの`;
+    }
 };
 
 const onHit = () => {
