@@ -116,6 +116,10 @@ const handleInputs = () => {
             id: 'button-hit',
             key: ' ',
             action: () => onHit()
+        },
+        {
+            id: 'button-camera',
+            action: () => stage.changeCamera()
         }
     ];
     
@@ -125,7 +129,7 @@ const handleInputs = () => {
         if(button) addIntervalListener(button, action);
 
         // for PCs
-        keyBoardHelper.addListener(key, action);
+        if(key) keyBoardHelper.addListener(key, action);
     });
 };
 

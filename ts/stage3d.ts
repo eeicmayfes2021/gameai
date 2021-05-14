@@ -17,6 +17,8 @@ export class Stage3D {
     private scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
+    private topCamera: THREE.PerspectiveCamera;
+    private useTopCamera: boolean = false;
     // private controls: OrbitControls;
     private stageSize: THREE.Vector2;
     private stones: THREE.Object3D[];
@@ -51,6 +53,10 @@ export class Stage3D {
         this.camera = new THREE.PerspectiveCamera(75, this.canvas.clientWidth / this.canvas.clientHeight, 10, 10000);
         this.camera.position.set(-this.stageSize.x / 2, 600, -950);
         this.camera.lookAt(-this.stageSize.x / 2, 600, this.stageSize.y / 2);
+        
+        this.topCamera = new THREE.PerspectiveCamera(75, this.canvas.clientWidth / this.canvas.clientHeight, 10, 10000);
+        this.topCamera.position.set(-this.stageSize.x / 2, 800, this.stageSize.y / 2);
+        this.topCamera.rotation.set(Math.PI / 2, Math.PI, 0);
         
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setPixelRatio(window.devicePixelRatio);
@@ -213,9 +219,11 @@ export class Stage3D {
     private render() {
         requestAnimationFrame(() => { this.render(); });
         
+        const camera = this.useTopCamera ? this.topCamera : this.camera;
+
         if (this.resizeRendererToDisplaySize()) {
-            this.camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
-            this.camera.updateProjectionMatrix();
+            camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+            camera.updateProjectionMatrix();
         }
         
         if(this.isIntro) {
@@ -224,7 +232,7 @@ export class Stage3D {
         
         this.stats.update();
         // this.controls.update();
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.scene, camera);
     }
     
     startIntro(onEnd: () => any) {
@@ -241,6 +249,10 @@ export class Stage3D {
         this.camera.rotateX(-1 * THREE.MathUtils.DEG2RAD);
         this.camera.translateZ(-20);
         this.rotated += 1;
+    }
+    
+    changeCamera() {
+        this.useTopCamera = !this.useTopCamera;
     }
 
     /**
