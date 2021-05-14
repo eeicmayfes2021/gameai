@@ -14,7 +14,7 @@ services:
       - ./dist:/usr/src/app/dist
     environment:
       - APP_DEBUG=1
-      - MODEL_BUCKET_NAME=eeic2021-gameai-1
+      # - MODEL_BUCKET_NAME=eeic2021-gameai-1
   train:
     build:
       context: .
