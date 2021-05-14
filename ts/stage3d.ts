@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { Reflector } from 'three/examples/jsm/objects/Reflector';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
-import Stats from 'three/examples/jsm/libs/stats.module';
+// import Stats from 'three/examples/jsm/libs/stats.module';
 import { Stone } from './models/common';
 import { isPhone } from './helpers/util';
 
@@ -25,7 +25,7 @@ export class Stage3D {
     private line: THREE.Line;
     private skybox: THREE.Texture;
     
-    private stats: Stats;
+    // private stats: Stats;
 
     private stoneRedModel?: THREE.Object3D;
     private stoneBlueModel?: THREE.Object3D;
@@ -67,11 +67,11 @@ export class Stage3D {
 
         this.stones = [];
         
-        this.stats = Stats();
-        this.stats.showPanel(0);
-        this.stats.dom.style.top = 'auto';
-        this.stats.dom.style.bottom = '120';
-        document.body.appendChild(this.stats.dom);
+        // this.stats = Stats();
+        // this.stats.showPanel(0);
+        // this.stats.dom.style.top = 'auto';
+        // this.stats.dom.style.bottom = '120';
+        // document.body.appendChild(this.stats.dom);
         
         this.isIntro = false;
         
@@ -88,13 +88,20 @@ export class Stage3D {
             const model = gltf.scene;
             model.scale.setScalar(100);
             model.rotateY(-Math.PI / 2);
+            model.traverse((object) => {
+                if(object instanceof THREE.Mesh) {
+                    if(object.material instanceof THREE.MeshStandardMaterial) {
+                        object.material.envMap = this.skybox;
+                    }
+                }
+            });
             this.scene.add(model);
         });
 
         const base = new THREE.Mesh(
             new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
             new THREE.MeshPhongMaterial({
-                map: loader.load('/dist/board.png'),
+                map: loader.load('/dist/board.jpg'),
                 transparent: isPC,
                 opacity: 0.7
             })
@@ -232,7 +239,7 @@ export class Stage3D {
             this.intro();
         }
         
-        this.stats.update();
+        // this.stats.update();
         // this.controls.update();
         this.renderer.render(this.scene, camera);
     }
