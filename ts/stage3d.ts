@@ -65,6 +65,14 @@ export class Stage3D {
     
     private constructStage(useReflector: boolean, useShadow: boolean = false) {
         const loader = new THREE.TextureLoader();
+        const gltfLoader = new GLTFLoader();
+        
+        gltfLoader.loadAsync('/dist/models/background.glb').then((gltf) => {
+            const model = gltf.scene;
+            model.scale.setScalar(100);
+            model.rotateY(-Math.PI / 2);
+            this.scene.add(model);
+        });
 
         const base = new THREE.Mesh(
             new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
@@ -111,8 +119,8 @@ export class Stage3D {
             light.shadow.camera.bottom = -300;
         }
 
-        this.scene.add(light);
-        this.scene.add(light.target);
+        // this.scene.add(light);
+        // this.scene.add(light.target);
         
         const ambient = new THREE.AmbientLight(0xffffff, 0.3);
         this.scene.add(ambient);
