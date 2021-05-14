@@ -212,8 +212,9 @@ async def game_start(sid, data):
             elif json["name"][0:-6]=="./models/eval_obs_":
                 xylist.append([int(json["name"][-6:])*100,winrate])
     xylist.sort()
-    xlist,ylist=(list(x) for x in zip(*xylist))
-    await sio.emit('make_graph', {'xlist': xlist, 'ylist':ylist},sid=sid)
+    if len(xylist)>0:
+        xlist,ylist=(list(x) for x in zip(*xylist))
+        await sio.emit('make_graph', {'xlist': xlist, 'ylist':ylist},sid=sid)
     
     global model_path, model_load
     print("game_start model: ", data['model'])
