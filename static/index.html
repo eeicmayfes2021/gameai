@@ -5,13 +5,18 @@
     <link rel="stylesheet" href="/dist/style.css">
   </head>
   <body>
+    <div id="graph-wrapper">
+      <div class="graph-content" id="graph-content">
+        <canvas id="scoregraph" width="600" height="250"></canvas>
+      </div>
+      <button id="button-graph">勝率グラフ</button>
+    </div>
     <div id="canvas-container">
-      <canvas id="scoregraph" width="600" height="100"></canvas>
       <canvas id="canvas-2d" width="600" height="1000"></canvas>
     </div>
     <img id="player-image" src="/dist/player.gif">
     <div id="scoreboard">
-      ←→キーで角度・↑↓キーで強さを決めて，<br>スペースキーで打ち出す。
+      <div id="key-info">←→キーで角度・↑↓キーで強さを決めて，<br>スペースキーで打ち出す。</div>
       <div id="model_message"></div>
       <div id="leftstone"></div>
     </div>

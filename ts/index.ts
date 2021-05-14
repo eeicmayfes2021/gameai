@@ -46,6 +46,7 @@ const onMakeGraph = (data:XYLIST) => {
             }]
         },
         options: {
+            maintainAspectRatio: false,
             scales: {
                 yAxes: [{
                     ticks: {
@@ -123,6 +124,11 @@ const onRestart = () => {
     onConnect();
 };
 
+const onToggleGraph = () => {
+    const dom = document.getElementById('graph-content')!;
+    dom.classList.toggle('active');
+};
+
 const handleInputs = () => {
     const inputs = [
         {
@@ -149,6 +155,10 @@ const handleInputs = () => {
             id: 'button-hit',
             key: ' ',
             action: () => onHit()
+        },
+        {
+            id: 'button-graph',
+            action: () => onToggleGraph()
         }
     ];
     
@@ -158,7 +168,7 @@ const handleInputs = () => {
         if(button) addIntervalListener(button, action);
 
         // for PCs
-        keyBoardHelper.addListener(key, action);
+        if(key) keyBoardHelper.addListener(key, action);
     });
 };
 

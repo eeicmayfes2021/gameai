@@ -17,6 +17,24 @@ body {
     display: none;
 }
 
+#graph-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.graph-content {
+    background-color: rgba(255,255,255,0.95);
+    height: 0;
+    transition: 0.2s;
+}
+
+.graph-content.active {
+    height: 250px;
+}
+
 #scoreboard {
     position: absolute;
     top: 100;
@@ -96,6 +114,10 @@ body {
     background-color: aqua;
 }
 @media screen and (max-width: 560px) {
+    #key-info {
+        display: none;
+    }
+
     #side-control-wrapper {
         display: block;
         position: absolute;
