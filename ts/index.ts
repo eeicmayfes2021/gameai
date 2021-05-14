@@ -133,7 +133,7 @@ const onReturn = () => {
 // ResultDialog で「もう一度」ボタンを押したとき
 const onRestart = () => {
     stage.removeStones();
-    onConnect();
+    initialize();
 };
 
 const onToggleGraph = () => {
