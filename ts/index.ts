@@ -109,10 +109,12 @@ const onFlick = (theta: number, velocity: number) => {
 
 const onModelLoad = (data:ModelMessage) => {
     console.log('model:', data.model_path);
-    if(ifmodelon){
-        const model_message = document.getElementById('model_message')!;
+    const model_message = document.getElementById('model_message')!;
+    if(ifmodelon && data.model_path){
         const model_epoch=parseInt(data.model_path.substring(18))*100
         model_message.innerHTML = `現在のモデルは${model_epoch}試合分学習したもの`;
+    }else{
+        model_message.innerHTML = `現在のモデルは0試合分学習したもの`;
     }
 };
 
