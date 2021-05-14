@@ -2,7 +2,6 @@ import { io } from 'socket.io-client';
 //import { Stage2D } from './stage2d';
 import { Stage3D } from './stage3d';
 import { PointerState } from './store';
-import { isPhone } from './helpers/util';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
 import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage,XYLIST } from './models/socket';
@@ -185,11 +184,6 @@ const handleInputs = () => {
 
 window.onload = () => {
     console.log('Page is loaded');
-    
-    if(!isPhone()) {
-        const graph = document.getElementById('graph-content')!;
-        graph.classList.add('active');
-    }
     
     handleInputs();
     socket.on('make_graph', onMakeGraph);
