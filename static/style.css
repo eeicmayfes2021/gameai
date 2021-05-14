@@ -37,7 +37,7 @@ body {
 
 #scoreboard {
     position: absolute;
-    top: 100;
+    bottom: 0;
     background-color:rgba(255,255,255,0.75);
     margin: 10px;
     padding: 5px;
@@ -114,6 +114,11 @@ body {
     background-color: aqua;
 }
 @media screen and (max-width: 560px) {
+    #scoreboard {
+        top: 50;
+        bottom: auto;
+    }
+
     #key-info {
         display: none;
     }
