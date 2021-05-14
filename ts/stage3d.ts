@@ -17,7 +17,7 @@ export class Stage3D {
     private scene: THREE.Scene;
     private renderer: THREE.WebGLRenderer;
     private camera: THREE.PerspectiveCamera;
-    private controls: OrbitControls;
+    // private controls: OrbitControls;
     private stageSize: THREE.Vector2;
     private stones: THREE.Object3D[];
     private line: THREE.Line;
@@ -27,6 +27,10 @@ export class Stage3D {
 
     private stoneRedModel?: THREE.Object3D;
     private stoneBlueModel?: THREE.Object3D;
+    
+    private isIntro: boolean;
+    private onIntroEnd?: () => any;
+    private rotated: number = 0;
 
     /**
      * Initialize Stage2D.
@@ -36,7 +40,7 @@ export class Stage3D {
         this.stageSize = new THREE.Vector2(stageWidth, stageHeight);
         
         this.skybox = this.setupSkybox();
-        this.scene.background = this.skybox;
+        // this.scene.background = this.skybox;
 
         this.constructStage(!isPhone());
         
@@ -45,20 +49,23 @@ export class Stage3D {
         this.canvas = document.getElementById(appendTo) as HTMLCanvasElement;
         
         this.camera = new THREE.PerspectiveCamera(75, this.canvas.clientWidth / this.canvas.clientHeight, 10, 10000);
-        this.camera.position.set(-this.stageSize.x / 2, 400, -250);
+        this.camera.position.set(-this.stageSize.x / 2, 600, -950);
+        this.camera.lookAt(-this.stageSize.x / 2, 600, this.stageSize.y / 2);
         
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
         this.renderer.setPixelRatio(window.devicePixelRatio);
         this.renderer.shadowMap.enabled = true;
         
-        this.controls = new OrbitControls(this.camera, this.canvas);
-        this.controls.target = new THREE.Vector3(-this.stageSize.x / 2, 0, this.stageSize.y / 2);
+        // this.controls = new OrbitControls(this.camera, this.canvas);
+        // this.controls.target = new THREE.Vector3(-this.stageSize.x / 2, 0, this.stageSize.y / 2);
 
         this.stones = [];
         
         this.stats = Stats();
         this.stats.showPanel(0);
         document.body.appendChild(this.stats.dom);
+        
+        this.isIntro = false;
         
         this.setupModels().then((_) => this.render());
     }
@@ -79,7 +86,7 @@ export class Stage3D {
             new THREE.MeshPhongMaterial({
                 map: loader.load('/dist/board.png'),
                 transparent: useReflector,
-                opacity: 0.5
+                opacity: 0.7
             })
         );
         base.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
@@ -147,9 +154,9 @@ export class Stage3D {
     private setupSkybox(): THREE.Texture {
         const loader = new THREE.CubeTextureLoader();
         const urls = [
-            '/dist/skybox/px.png', '/dist/skybox/nx.png',
-            '/dist/skybox/py.png', '/dist/skybox/ny.png',
-            '/dist/skybox/pz.png', '/dist/skybox/nz.png',
+            '/dist/skybox/px.jpg', '/dist/skybox/nx.jpg',
+            '/dist/skybox/py.jpg', '/dist/skybox/ny.jpg',
+            '/dist/skybox/pz.jpg', '/dist/skybox/nz.jpg',
         ];
         const texture = loader.load(urls);
         texture.mapping = THREE.CubeReflectionMapping;
@@ -207,9 +214,29 @@ export class Stage3D {
             this.camera.updateProjectionMatrix();
         }
         
+        if(this.isIntro) {
+            this.intro();
+        }
+        
         this.stats.update();
-        this.controls.update();
+        // this.controls.update();
         this.renderer.render(this.scene, this.camera);
+    }
+    
+    startIntro(onEnd: () => any) {
+        this.isIntro = true;
+        this.onIntroEnd = onEnd;
+    }
+    
+    private intro() {
+        if(this.rotated > 30) {
+            this.isIntro = false;
+            this.onIntroEnd?.();
+        }
+
+        this.camera.rotateX(-1 * THREE.MathUtils.DEG2RAD);
+        this.camera.translateZ(-20);
+        this.rotated += 1;
     }
 
     /**

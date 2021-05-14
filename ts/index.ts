@@ -27,13 +27,19 @@ const onConnect = () => {
 
 const onSelecton = () => {
     console.log('gameStart!');
-    const data = { model: 'on' };
-    socket.emit('game_start', data);
+    
+    stage.startIntro(() => {
+        const data = { model: 'on' };
+        socket.emit('game_start', data);
+    });
 };
 const onSelectoff = () => {
     console.log('gameStart!');
-    const data = { model: 'off' };
-    socket.emit('game_start', data);
+    
+    stage.startIntro(() => {
+        const data = { model: 'off' };
+        socket.emit('game_start', data);
+    });
 };
 
 const onYourTurn = (data:LeftMessage) => {
