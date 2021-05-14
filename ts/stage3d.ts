@@ -70,11 +70,13 @@ export class Stage3D {
         this.setupModels().then((_) => this.render());
     }
     
-    private constructStage(useReflector: boolean, useShadow: boolean = false) {
+    private constructStage(isPC: boolean, useShadow: boolean = false) {
         const loader = new THREE.TextureLoader();
         const gltfLoader = new GLTFLoader();
         
-        gltfLoader.loadAsync('/dist/models/background.glb').then((gltf) => {
+        const background = isPC ? '/dist/models/background.glb'
+            : '/dist/models/background_nolight.glb';
+        gltfLoader.loadAsync(background).then((gltf) => {
             const model = gltf.scene;
             model.scale.setScalar(100);
             model.rotateY(-Math.PI / 2);
@@ -85,7 +87,7 @@ export class Stage3D {
             new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
             new THREE.MeshPhongMaterial({
                 map: loader.load('/dist/board.png'),
-                transparent: useReflector,
+                transparent: isPC,
                 opacity: 0.7
             })
         );
@@ -95,7 +97,7 @@ export class Stage3D {
         base.receiveShadow = true;
         this.scene.add(base);
         
-        if(useReflector) {
+        if(isPC) {
             const ref = new Reflector(
                 new THREE.PlaneGeometry(this.stageSize.x, this.stageSize.y),
                 {
@@ -112,7 +114,7 @@ export class Stage3D {
             this.scene.add(ref);
         }
         
-        const light = new THREE.DirectionalLight(0xffffff, 1);
+        const light = new THREE.DirectionalLight(0xffffff, 2);
         light.position.set(400, 500, 300);
         light.target.position.set(-this.stageSize.x / 2, 0, this.stageSize.y / 2);
 
@@ -126,8 +128,10 @@ export class Stage3D {
             light.shadow.camera.bottom = -300;
         }
 
-        // this.scene.add(light);
-        // this.scene.add(light.target);
+        if(!isPC) {
+            this.scene.add(light);
+            this.scene.add(light.target);
+        }
         
         const ambient = new THREE.AmbientLight(0xffffff, 0.3);
         this.scene.add(ambient);
