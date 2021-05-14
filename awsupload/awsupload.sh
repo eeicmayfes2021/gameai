@@ -1,7 +1,8 @@
 #!/bin/sh
 while true; do
     basepass=$(pwd)
-    for foldername in ${basepass}/models/*; do
+    modelpass="${basepass}/models/*"
+    for foldername in $modelpass; do
         f=${foldername##*/}
         echo $f
         if grep -q $f ${basepass}/awsupload/uploadedfolders.txt; then
@@ -12,5 +13,5 @@ while true; do
             echo $f >> ${basepass}/awsupload/uploadedfolders.txt
         fi    
     done
-    sleep 600;
+    sleep 180;
 done
