@@ -59,7 +59,7 @@ def get_model_from_s3():
 
 # モデルの一覧を返します。
 def get_model_list():
-    epoches = 0
+    epoches = 10
     base_path = "./models/eval_obs_"
     models = []
 
