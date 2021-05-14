@@ -193,6 +193,10 @@ def getscorejson():
 @sio.event
 async def connect(sid, environ):
     print("connect ", sid)
+
+@sio.event
+async def init(sid):
+    print("init ", sid)
     situations[sid]=[]
 
 @sio.event

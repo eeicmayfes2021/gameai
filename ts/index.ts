@@ -24,6 +24,12 @@ let ifmodelon=true;
 
 const onConnect = () => {
     console.log("Connect")
+    // do nothing
+};
+
+const initialize = () => {
+    socket.emit('init');
+    console.log("Init")
     selectDialog.show();
 };
 const onMakeGraph = (data:XYLIST) => {
@@ -187,6 +193,7 @@ window.onload = () => {
     
     handleInputs();
     socket.on('make_graph', onMakeGraph);
+    initialize();
     socket.on('connect', onConnect);
     socket.on('model_load', onModelLoad);
     socket.on('your_turn', onYourTurn);
