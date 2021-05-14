@@ -28,15 +28,21 @@ const onConnect = () => {
 
 const onSelecton = () => {
     console.log('gameStart!');
-    const data = { model: 'on' };
-    socket.emit('game_start', data);
-    ifmodelon=true;
+  
+    stage.startIntro(() => {
+        const data = { model: 'on' };
+        socket.emit('game_start', data);
+      ifmodelon=true;
+    });
 };
 const onSelectoff = () => {
     console.log('gameStart!');
-    const data = { model: 'off' };
-    socket.emit('game_start', data);
-    ifmodelon=false;
+    
+    stage.startIntro(() => {
+        const data = { model: 'off' };
+        socket.emit('game_start', data);
+        ifmodelon=false;
+    });
 };
 
 const onYourTurn = (data:LeftMessage) => {
@@ -118,6 +124,10 @@ const handleInputs = () => {
             id: 'button-hit',
             key: ' ',
             action: () => onHit()
+        },
+        {
+            id: 'button-camera',
+            action: () => stage.changeCamera()
         }
     ];
     
@@ -127,7 +137,7 @@ const handleInputs = () => {
         if(button) addIntervalListener(button, action);
 
         // for PCs
-        keyBoardHelper.addListener(key, action);
+        if(key) keyBoardHelper.addListener(key, action);
     });
 };
 

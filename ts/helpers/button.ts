@@ -5,6 +5,10 @@ interface Listener { (): void };
 
 export const addIntervalListener = (target: HTMLElement, listener: Listener) => {
     let handler: number;
+    target.addEventListener('click', (event) => {
+        event.preventDefault();
+        listener();
+    });
     target.addEventListener('touchstart', (event) => {
         event.preventDefault();
         listener();
