@@ -23,6 +23,12 @@ let ifmodelon=true;
 
 const onConnect = () => {
     console.log("Connect")
+    // do nothing
+};
+
+const initialize = () => {
+    socket.emit('init');
+    console.log("Init")
     selectDialog.show();
 };
 
@@ -145,6 +151,8 @@ window.onload = () => {
     console.log('Page is loaded');
     
     handleInputs();
+
+    initialize();
 
     socket.on('connect', onConnect);
     socket.on('model_load', onModelLoad);
