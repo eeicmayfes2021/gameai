@@ -23,12 +23,37 @@ body {
     display: none;
 }
 
-#scoreboard {
+#graph-wrapper {
     position: absolute;
     top: 0;
-    background-color: white;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.graph-content {
+    background-color: rgba(255,255,255,0.95);
+    height: 0;
+    transition: 0.2s;
+}
+
+.graph-content.active {
+    height: 250px;
+}
+
+#scoreboard {
+    position: absolute;
+    bottom: 0;
+    background-color:rgba(255,255,255,0.75);
     margin: 10px;
     padding: 5px;
+}
+
+#upper-control-wrapper {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 10px;
 }
 
 #lower-control-wrapper {
@@ -95,6 +120,7 @@ button:hover, .button-hover {
     align-items: center;
     background-color: #000000AA;
     display: none;
+    z-index: 200;
 }
 
 .dialog {
@@ -117,6 +143,15 @@ button:hover, .button-hover {
 }
 
 @media screen and (max-width: 560px) {
+    #scoreboard {
+        top: 50;
+        bottom: auto;
+    }
+
+    #key-info {
+        display: none;
+    }
+
     #side-control-wrapper {
         display: block;
         position: absolute;

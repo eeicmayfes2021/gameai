@@ -4,16 +4,16 @@ models以下に
 https://drive.google.com/drive/folders/1vk-7_WMdSPf_ULpmY1LY4dX0Ek6Ebx1S?usp=sharing
 から好きなモデルの**フォルダ**を持ってきて配置する．
 
+
+**以下はなぜか動かないらしいのでdockerで動かしてください。**
 ```bash
 $ npm install
 $ npm run build
-$ pip install aiohttp
-$ pip install python-socketio
-$ pip install tensorflow
-$ pip install cpython
-$ pip install --upgrade cython
+$ pip install -r requirements.txt
+$ cd src
 $ python setup.py build_ext --inplace
-$ python server.py
+$ cd ..
+$ python src/server.py
 ```
 
 ## dockerでの動かし方

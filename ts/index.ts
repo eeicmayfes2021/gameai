@@ -4,8 +4,9 @@ import { Stage3D } from './stage3d';
 import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
-import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage } from './models/socket';
+import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage,XYLIST } from './models/socket';
 import { ResultDialog,SelectDialog } from './dialog';
+import Chart from 'chart.js';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -19,21 +20,61 @@ const pointerState = new PointerState((angle, velocity) => {
 
 const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
 const selectDialog = new SelectDialog(() => onSelecton(), () => onSelectoff());
+let ifmodelon=true;
 
 const onConnect = () => {
     console.log("Connect")
     selectDialog.show();
 };
+const onMakeGraph = (data:XYLIST) => {
+    //グラフの表示
+    //var url="https://0k33okho4j.execute-api.ap-northeast-1.amazonaws.com/api/model"
+    const scoregraph = <HTMLCanvasElement> document.getElementById("scoregraph")!;
+    const ctx = scoregraph.getContext("2d")!;
+    var img = new Image();
+    console.log(data.xlist)
+    console.log(data.ylist)
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.xlist,
+            datasets: [{
+                label: 'AIの勝率',
+                data: data.ylist,
+                borderColor:'rgb(255, 0, 0)',
+                backgroundColor:'rgb(255, 0, 0,0.1)',
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
+};
 
 const onSelecton = () => {
     console.log('gameStart!');
-    const data = { model: 'on' };
-    socket.emit('game_start', data);
+  
+    stage.startIntro(() => {
+        const data = { model: 'on' };
+        socket.emit('game_start', data);
+      ifmodelon=true;
+    });
 };
 const onSelectoff = () => {
     console.log('gameStart!');
-    const data = { model: 'off' };
-    socket.emit('game_start', data);
+    
+    stage.startIntro(() => {
+        const data = { model: 'off' };
+        socket.emit('game_start', data);
+        ifmodelon=false;
+    });
 };
 
 const onYourTurn = (data:LeftMessage) => {
@@ -62,6 +103,11 @@ const onFlick = (theta: number, velocity: number) => {
 
 const onModelLoad = (data:ModelMessage) => {
     console.log('model:', data.model_path);
+    if(ifmodelon){
+        const model_message = document.getElementById('model_message')!;
+        const model_epoch=parseInt(data.model_path.substring(18))*100
+        model_message.innerHTML = `現在のモデルは${model_epoch}試合分学習したもの`;
+    }
 };
 
 const onHit = () => {
@@ -82,6 +128,11 @@ const onReturn = () => {
 const onRestart = () => {
     stage.removeStones();
     onConnect();
+};
+
+const onToggleGraph = () => {
+    const dom = document.getElementById('graph-content')!;
+    dom.classList.toggle('active');
 };
 
 const handleInputs = () => {
@@ -110,6 +161,14 @@ const handleInputs = () => {
             id: 'button-hit',
             key: ' ',
             action: () => onHit()
+        },
+        {
+            id: 'button-graph',
+            action: () => onToggleGraph()
+        },
+        {
+            id: 'button-camera',
+            action: () => stage.changeCamera()
         }
     ];
     
@@ -119,7 +178,7 @@ const handleInputs = () => {
         if(button) addIntervalListener(button, action);
 
         // for PCs
-        keyBoardHelper.addListener(key, action);
+        if(key) keyBoardHelper.addListener(key, action);
     });
 };
 
@@ -127,7 +186,7 @@ window.onload = () => {
     console.log('Page is loaded');
     
     handleInputs();
-
+    socket.on('make_graph', onMakeGraph);
     socket.on('connect', onConnect);
     socket.on('model_load', onModelLoad);
     socket.on('your_turn', onYourTurn);
