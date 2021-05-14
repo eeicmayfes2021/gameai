@@ -61,15 +61,21 @@ const onMakeGraph = (data:XYLIST) => {
 
 const onSelecton = () => {
     console.log('gameStart!');
-    const data = { model: 'on' };
-    socket.emit('game_start', data);
-    ifmodelon=true;
+  
+    stage.startIntro(() => {
+        const data = { model: 'on' };
+        socket.emit('game_start', data);
+      ifmodelon=true;
+    });
 };
 const onSelectoff = () => {
     console.log('gameStart!');
-    const data = { model: 'off' };
-    socket.emit('game_start', data);
-    ifmodelon=false;
+    
+    stage.startIntro(() => {
+        const data = { model: 'off' };
+        socket.emit('game_start', data);
+        ifmodelon=false;
+    });
 };
 
 const onYourTurn = (data:LeftMessage) => {
@@ -160,6 +166,10 @@ const handleInputs = () => {
         {
             id: 'button-graph',
             action: () => onToggleGraph()
+        },
+        {
+            id: 'button-camera',
+            action: () => stage.changeCamera()
         }
     ];
     

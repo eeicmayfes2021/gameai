@@ -43,6 +43,13 @@ body {
     padding: 5px;
 }
 
+#upper-control-wrapper {
+    position: absolute;
+    right: 0;
+    top: 0;
+    padding: 10px;
+}
+
 #lower-control-wrapper {
     display: none;
 }
