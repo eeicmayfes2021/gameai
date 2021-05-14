@@ -72,3 +72,30 @@ export class SelectDialog {
         this.container.style.display = 'none';
     }
 }
+
+export class GraphDialog {
+    private container: HTMLElement;
+    
+    constructor() {
+        // /dist/main.js は body の最後で読み込まれるので、これらの要素は存在すると仮定
+        // （class として作っているのに動的に生成しないのはおかしいのだが…）
+        this.container = document.getElementById('graph-container')!;
+        
+        const  hideButton = document.getElementById('button-graph-back')!;
+        hideButton.addEventListener('click', (_) => {
+            this.hide();
+        });
+        const  showButton = document.getElementById('button-graph')!;
+        showButton.addEventListener('click', (_) => {
+            this.show();
+        });
+    }
+
+    show() {
+        this.container.style.display = 'flex';
+    }
+
+    hide() {
+        this.container.style.display = 'none';
+    }
+}

@@ -5,7 +5,7 @@ import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
 import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage,XYLIST } from './models/socket';
-import { ResultDialog,SelectDialog } from './dialog';
+import { ResultDialog,SelectDialog,GraphDialog } from './dialog';
 import Chart from 'chart.js';
 
 const socket = io();
@@ -20,6 +20,7 @@ const pointerState = new PointerState((angle, velocity) => {
 
 const resultDialog = new ResultDialog(() => onReturn(), () => onRestart());
 const selectDialog = new SelectDialog(() => onSelecton(), () => onSelectoff());
+const graphDialog = new GraphDialog();
 let ifmodelon=true;
 
 const onConnect = () => {
