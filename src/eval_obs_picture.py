@@ -168,6 +168,6 @@ for episode in range(episode_num):
         plt.plot(x,scores_list,'b+')
         plt.savefig("graphs/eval_obs.png")
     #SAVE_NUMエピソードごとにモデルを保存 https://www.tensorflow.org/guide/saved_model
-    if episode%SAVE_NUM==0:
-        tf.saved_model.save(model, 'models/eval_obs_{:0=6}/'.format(episode))
-        print("saved ",'models/eval_obs_{:0=6}/'.format(episode))
+    if (episode+1)%SAVE_NUM==0:
+        tf.saved_model.save(model, 'models/eval_obs_{:0=6}/'.format(episode+1))
+        print("saved ",'models/eval_obs_{:0=6}/'.format(episode+1))
