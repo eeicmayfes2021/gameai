@@ -60,6 +60,10 @@ body {
     display: none;
 }
 
+#lower-control-wrapper i, #upper-control-wrapper i {
+    font-size: 22pt;
+}
+
 #lower-controls {
     display: flex;
     justify-content: space-between;
@@ -87,6 +91,11 @@ button {
 
 button:hover, .button-hover {
     background-color: #51819FAA;
+}
+
+.button-graph {
+    border-radius: 0 0 16px 16px;
+    padding: 5px;
 }
 
 /* この辺のスタイルは適当なので要修正 */
