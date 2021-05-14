@@ -4,8 +4,9 @@ import { Stage3D } from './stage3d';
 import { PointerState } from './store';
 import { keyBoardHelper } from './helpers/keyboard';
 import { addIntervalListener } from './helpers/button';
-import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage } from './models/socket';
+import { MoveStonesMessage, WinMessage, ModelMessage, LeftMessage,XYLIST } from './models/socket';
 import { ResultDialog,SelectDialog } from './dialog';
+import Chart from 'chart.js';
 
 const socket = io();
 //const stage = new Stage2D('canvas-2d', (dx, dy) => onFlick(dx, dy));
@@ -30,6 +31,37 @@ const initialize = () => {
     socket.emit('init');
     console.log("Init")
     selectDialog.show();
+};
+const onMakeGraph = (data:XYLIST) => {
+    //グラフの表示
+    //var url="https://0k33okho4j.execute-api.ap-northeast-1.amazonaws.com/api/model"
+    const scoregraph = <HTMLCanvasElement> document.getElementById("scoregraph")!;
+    const ctx = scoregraph.getContext("2d")!;
+    var img = new Image();
+    console.log(data.xlist)
+    console.log(data.ylist)
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: data.xlist,
+            datasets: [{
+                label: 'AIの勝率',
+                data: data.ylist,
+                borderColor:'rgb(255, 0, 0)',
+                backgroundColor:'rgb(255, 0, 0,0.1)',
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        }
+    });
 };
 
 const onSelecton = () => {
@@ -104,6 +136,11 @@ const onRestart = () => {
     onConnect();
 };
 
+const onToggleGraph = () => {
+    const dom = document.getElementById('graph-content')!;
+    dom.classList.toggle('active');
+};
+
 const handleInputs = () => {
     const inputs = [
         {
@@ -132,6 +169,10 @@ const handleInputs = () => {
             action: () => onHit()
         },
         {
+            id: 'button-graph',
+            action: () => onToggleGraph()
+        },
+        {
             id: 'button-camera',
             action: () => stage.changeCamera()
         }
@@ -151,9 +192,8 @@ window.onload = () => {
     console.log('Page is loaded');
     
     handleInputs();
-
+    socket.on('make_graph', onMakeGraph);
     initialize();
-
     socket.on('connect', onConnect);
     socket.on('model_load', onModelLoad);
     socket.on('your_turn', onYourTurn);

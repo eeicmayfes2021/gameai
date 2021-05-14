@@ -11,6 +11,8 @@ import subprocess
 import datetime
 import requests
 import json
+import requests
+import json
 
 from cdefinitions import *
 from variables import *
@@ -182,6 +184,12 @@ async def index(request):
 async def model_list(request):
     return web.json_response(models)
 
+def getscorejson():
+    url="https://0k33okho4j.execute-api.ap-northeast-1.amazonaws.com/api/model"
+    response = requests.get(url)
+    jsonData = response.json()
+    return jsonData
+
 @sio.event
 async def connect(sid, environ):
     print("connect ", sid)
@@ -193,6 +201,20 @@ async def init(sid):
 
 @sio.event
 async def game_start(sid, data): 
+    #グラフを作成してdist/graph.pngに格納
+    jsons=getscorejson()#"name":"./models/eval_obs_000450","total":4,"win":2,"lose":2
+    xylist=[]
+    for json in jsons:
+        if json["total"]>0:
+            winrate=json["win"]/json["total"]
+            if json["name"]=="initial":
+                xylist.append([0,winrate])
+            elif json["name"][0:-6]=="./models/eval_obs_":
+                xylist.append([int(json["name"][-6:])*100,winrate])
+    xylist.sort()
+    xlist,ylist=(list(x) for x in zip(*xylist))
+    await sio.emit('make_graph', {'xlist': xlist, 'ylist':ylist},sid=sid)
+    
     global model_path, model_load
     print("game_start model: ", data['model'])
     ifmodelon[sid]=data['model']

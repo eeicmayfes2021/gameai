@@ -2,20 +2,27 @@
   <head>
     <title>EEIC GameAI</title>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <script src="https://kit.fontawesome.com/b45717c22a.js" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="/dist/style.css">
   </head>
   <body>
+    <div id="graph-wrapper">
+      <div class="graph-content" id="graph-content">
+        <canvas id="scoregraph" width="600" height="250"></canvas>
+      </div>
+      <button id="button-graph" class="button-graph"><i class="fas fa-chart-line"></i> 勝率グラフ</button>
+    </div>
     <div id="canvas-container">
       <canvas id="canvas-2d" width="600" height="1000"></canvas>
     </div>
     <img id="player-image" src="/dist/player.gif">
     <div id="scoreboard">
-      ←→キーで角度を決めて，<br>↑↓キーで強さを決めて，<br>スペースキーで打ち出す。
+      <div id="key-info">←→キーで角度・↑↓キーで強さを決めて，<br>スペースキーで打ち出す。</div>
       <div id="model_message"></div>
       <div id="leftstone"></div>
     </div>
     <div id="upper-control-wrapper">
-      <button id="button-camera" class="button-ud">視点切替</button>
+      <button id="button-camera" class="button-ud"><i class="fas fa-sync-alt"></i><br>視点切替</button>
     </div>
     <div id="side-control-wrapper">
       <div id="side-controls">
@@ -25,9 +32,9 @@
     </div>
     <div id="lower-control-wrapper">
       <div id="lower-controls">
-        <button id="button-left" class="button-lr">左</button>
+        <button id="button-left" class="button-lr"><i class="fas fa-chevron-left"></i><br>左</button>
         <button id="button-hit" class="button-hit">Hit</button>
-        <button id="button-right" class="button-lr">右</button>
+        <button id="button-right" class="button-lr"><i class="fas fa-chevron-right"></i><br>右</button>
       </div>
     </div>
     <div id="dialog-container" class="dialog-container">
@@ -46,7 +53,7 @@
         <p id="dialog-content2">負けた方のもっとも真ん中に近いストーンより<br>内側にあるストーンの数が得点となります</p>
         <div id="dialog-buttons2"  class="dialog-buttons">
           <button id="button-off">学習前AIと対戦</button>
-          <button id="button-on" class="bluebutton">学習済みAIと対戦</button>
+          <button id="button-on">学習済みAIと対戦</button>
         </div>
       </div>
     </div>

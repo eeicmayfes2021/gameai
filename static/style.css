@@ -1,7 +1,13 @@
+@font-face{ 
+    font-family: 'mplus-1c-regular';
+    src: url('/dist/Mplus1-Regular.woff') format('woff');
+}
+
 body {
     width: 100%;
     height: 100%;
     margin: 0;
+    font-family: 'mplus-1c-regular';
 }
 
 #canvas-container {
@@ -17,10 +23,28 @@ body {
     display: none;
 }
 
-#scoreboard {
+#graph-wrapper {
     position: absolute;
     top: 0;
-    background-color: white;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.graph-content {
+    background-color: rgba(255,255,255,0.95);
+    height: 0;
+    transition: 0.2s;
+}
+
+.graph-content.active {
+    height: 250px;
+}
+
+#scoreboard {
+    position: absolute;
+    bottom: 0;
+    background-color:rgba(255,255,255,0.75);
     margin: 10px;
     padding: 5px;
 }
@@ -34,6 +58,10 @@ body {
 
 #lower-control-wrapper {
     display: none;
+}
+
+#lower-control-wrapper i, #upper-control-wrapper i {
+    font-size: 22pt;
 }
 
 #lower-controls {
@@ -52,10 +80,26 @@ body {
     margin: 5px;
 }
 
+button {
+    font-family: 'mplus-1c-regular';
+    background: #00324BAA 0% 0% no-repeat padding-box;
+    border: 5px solid #0095F2;
+    border-radius: 16px;
+    opacity: 1;
+    color: white;
+}
+
+button:hover, .button-hover {
+    background-color: #51819FAA;
+}
+
+.button-graph {
+    border-radius: 0 0 16px 16px;
+    padding: 5px;
+}
+
 /* この辺のスタイルは適当なので要修正 */
 .button-lr, .button-ud, .button-hit {
-    border: 2px solid #222;
-    border-radius: 5px;
     margin: 5px;
     user-select: none;
 }
@@ -85,24 +129,38 @@ body {
     align-items: center;
     background-color: #000000AA;
     display: none;
+    z-index: 200;
 }
 
 .dialog {
-    background-color: white;
+    background-color: #002836;
     padding: 10px;
     border: 1px solid #222;
     border-radius: 5px;
     text-align: center;
+    color: white;
 }
 
 .dialog-buttons {
     display: flex;
     justify-content: center;
 }
-.bluebutton {
-    background-color: aqua;
+
+.dialog-buttons > button {
+    padding: 5px 15px;
+    margin: 5px;
 }
+
 @media screen and (max-width: 560px) {
+    #scoreboard {
+        top: 50;
+        bottom: auto;
+    }
+
+    #key-info {
+        display: none;
+    }
+
     #side-control-wrapper {
         display: block;
         position: absolute;

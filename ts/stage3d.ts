@@ -69,6 +69,8 @@ export class Stage3D {
         
         this.stats = Stats();
         this.stats.showPanel(0);
+        this.stats.dom.style.top = 'auto';
+        this.stats.dom.style.bottom = '120';
         document.body.appendChild(this.stats.dom);
         
         this.isIntro = false;

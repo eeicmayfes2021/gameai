@@ -15,3 +15,7 @@ export interface ModelMessage {
 export interface LeftMessage {
     left: number;
 }
+export interface XYLIST {
+    xlist: number[];
+    ylist: number[];
+}
