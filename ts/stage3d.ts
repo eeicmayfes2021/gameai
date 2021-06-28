@@ -262,6 +262,11 @@ export class Stage3D {
     
     changeCamera() {
         this.useTopCamera = !this.useTopCamera;
+        
+        const camera = this.useTopCamera ? this.topCamera : this.camera;
+
+        camera.aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+        camera.updateProjectionMatrix();
     }
 
     /**
@@ -326,7 +331,7 @@ export class Stage3D {
     private resizeRendererToDisplaySize() {
         const [width, height] = [window.innerWidth, window.innerHeight];
 
-        const needResize = this.canvas.width !== width || this.canvas.height !== height;
+        const needResize = this.canvas.clientWidth !== width || this.canvas.clientHeight !== height;
         if (needResize) {
             this.renderer.setSize(width, height, false);
         }
