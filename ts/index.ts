@@ -96,12 +96,21 @@ const onMoveStones = (data?: MoveStonesMessage) => {
 
 const onYouWin = (data: WinMessage) => {
     console.log('you win! score:', data.score);
+    changeUIVisibility(false);
     resultDialog.show(true, data.score, ifmodelon, model_epoch);
 };
 
 const onAIWin = (data: WinMessage) => {
     console.log('AI win! score:', data.score);
+    changeUIVisibility(false);
     resultDialog.show(false, data.score, ifmodelon, model_epoch);
+};
+
+const changeUIVisibility = (visible: boolean) => {
+    const targets = Array.from(document.getElementsByClassName('hide-on-finish')) as HTMLElement[];
+    targets.forEach((t) => {
+        t.style.visibility = visible ? 'visible' : 'hidden';
+    });
 };
 
 const onFlick = (theta: number, velocity: number) => {
@@ -136,6 +145,7 @@ const onReturn = () => {
 // ResultDialog で「もう一度」ボタンを押したとき
 const onRestart = () => {
     stage.removeStones();
+    changeUIVisibility(true);
     initialize();
 };
 

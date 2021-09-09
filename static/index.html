@@ -16,7 +16,7 @@
       <canvas id="canvas-2d" width="600" height="1000"></canvas>
     </div>
     <img id="player-image" src="/dist/player.gif">
-    <div id="scoreboard">
+    <div id="scoreboard" class="hide-on-finish">
       <div id="key-info">←→キーで角度・↑↓キーで強さを決めて，<br>スペースキーで打ち出す。</div>
       <div id="model_message"></div>
       <div id="leftstone"></div>
@@ -24,13 +24,13 @@
     <div id="upper-control-wrapper">
       <button id="button-camera" class="button-ud"><i class="fas fa-sync-alt"></i><br>視点切替</button>
     </div>
-    <div id="side-control-wrapper">
+    <div id="side-control-wrapper" class="hide-on-finish">
       <div id="side-controls">
         <button id="button-up" class="button-ud">強く</button>
         <button id="button-down" class="button-ud">弱く</button>
       </div>
     </div>
-    <div id="lower-control-wrapper">
+    <div id="lower-control-wrapper" class="hide-on-finish">
       <div id="lower-controls">
         <button id="button-left" class="button-lr"><i class="fas fa-chevron-left"></i><br>左</button>
         <button id="button-hit" class="button-hit">Hit</button>
