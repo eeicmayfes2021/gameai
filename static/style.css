@@ -80,6 +80,18 @@ body {
     margin: 5px;
 }
 
+#restart-button-container {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    padding: 10px;
+    display: none;
+}
+
+#restart-button-container > button {
+    padding: 5px 15px;
+}
+
 button {
     font-family: 'mplus-1c-regular';
     background: #00324BAA 0% 0% no-repeat padding-box;

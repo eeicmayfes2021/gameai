@@ -139,11 +139,15 @@ const onHit = () => {
 
 // ResultDialog で「戻る」ボタンを押したとき
 const onReturn = () => {
-    // do nothing
+    const container = document.getElementById('restart-button-container')!;
+    container.style.display = 'block';
 };
 
 // ResultDialog で「もう一度」ボタンを押したとき
 const onRestart = () => {
+    const container = document.getElementById('restart-button-container')!;
+    container.style.display = 'none';
+
     stage.removeStones();
     changeUIVisibility(true);
     initialize();
@@ -188,6 +192,10 @@ const handleInputs = () => {
         {
             id: 'button-camera',
             action: () => stage.changeCamera()
+        },
+        {
+            id: 'button-restart-lb',
+            action: () => onRestart()
         }
     ];
     
