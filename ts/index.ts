@@ -96,12 +96,21 @@ const onMoveStones = (data?: MoveStonesMessage) => {
 
 const onYouWin = (data: WinMessage) => {
     console.log('you win! score:', data.score);
+    changeUIVisibility(false);
     resultDialog.show(true, data.score, ifmodelon, model_epoch);
 };
 
 const onAIWin = (data: WinMessage) => {
     console.log('AI win! score:', data.score);
+    changeUIVisibility(false);
     resultDialog.show(false, data.score, ifmodelon, model_epoch);
+};
+
+const changeUIVisibility = (visible: boolean) => {
+    const targets = Array.from(document.getElementsByClassName('hide-on-finish')) as HTMLElement[];
+    targets.forEach((t) => {
+        t.style.visibility = visible ? 'visible' : 'hidden';
+    });
 };
 
 const onFlick = (theta: number, velocity: number) => {
@@ -130,12 +139,17 @@ const onHit = () => {
 
 // ResultDialog で「戻る」ボタンを押したとき
 const onReturn = () => {
-    // do nothing
+    const container = document.getElementById('restart-button-container')!;
+    container.style.display = 'block';
 };
 
 // ResultDialog で「もう一度」ボタンを押したとき
 const onRestart = () => {
+    const container = document.getElementById('restart-button-container')!;
+    container.style.display = 'none';
+
     stage.removeStones();
+    changeUIVisibility(true);
     initialize();
 };
 
@@ -178,6 +192,10 @@ const handleInputs = () => {
         {
             id: 'button-camera',
             action: () => stage.changeCamera()
+        },
+        {
+            id: 'button-restart-lb',
+            action: () => onRestart()
         }
     ];
     
