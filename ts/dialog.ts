@@ -29,11 +29,11 @@ export class ResultDialog {
         if(win) {
             this.title.innerText = 'Win!';
             this.content.innerText = `${score}点であなたの勝ちです！`;
-            this.sharebutton.href = `http://twitter.com/share?url=${encodeURIComponent('https://2021.eeic.jp/')}&text=${encodeURIComponent(`${ifmodelon ? model_epoch + "回学習した" : "学習前の" }ゲームAIに${score}点で勝った！`)}&hashtags=${encodeURIComponent('eeic_gameai,電気の展覧会')}`
+            this.sharebutton.href = `http://twitter.com/share?url=${encodeURIComponent('https://2021.eeic.jp/')}&text=${encodeURIComponent(`${ifmodelon ? model_epoch + "回学習した" : "学習前の" }ゲームAIに${score}点で勝った！`)}&hashtags=${encodeURIComponent('eeic_gameai,近未来体験2021')}`
         }else {
             this.title.innerText = 'Lose!';
             this.content.innerText = `${score}点であなたの負けです！`;
-            this.sharebutton.href = `http://twitter.com/share?url=${encodeURIComponent('https://2021.eeic.jp/')}&text=${encodeURIComponent(`${ifmodelon ? model_epoch + "回学習した" : "学習前の" }ゲームAIに${score}点で負けた…`)}&hashtags=${encodeURIComponent('eeic_gameai,電気の展覧会')}`
+            this.sharebutton.href = `http://twitter.com/share?url=${encodeURIComponent('https://2021.eeic.jp/')}&text=${encodeURIComponent(`${ifmodelon ? model_epoch + "回学習した" : "学習前の" }ゲームAIに${score}点で負けた…`)}&hashtags=${encodeURIComponent('eeic_gameai,近未来体験2021')}`
         }
         this.container.style.display = 'flex';
     }
