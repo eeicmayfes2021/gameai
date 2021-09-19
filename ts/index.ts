@@ -208,7 +208,7 @@ const handleInputs = () => {
         if(key) keyBoardHelper.addListener(key, action);
     });
 };
-
+document.domain="eeic.jp";
 window.onload = () => {
     console.log('Page is loaded');
     
