@@ -25,7 +25,13 @@ API_URL = 'https://0k33okho4j.execute-api.ap-northeast-1.amazonaws.com/api'
 API_TOKEN = 'qYpG2xGo8osuyQqYLLa3Ehp32HLdL2eGHT2YJrC2rHj3P82X9w'
 
 sio = socketio.AsyncServer(async_mode='aiohttp', ping_timeout=10, ping_interval=30)#,logger=True, engineio_logger=True
-app = web.Application()
+@web.middleware
+async def cors_middleware(request, handler):
+    response = await handler(request)
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
+
+app = web.Application(middlewares=[cors_middleware])
 sio.attach(app)
 # model_load= tf.keras.models.load_model('models/eval_obs_002160')
 
